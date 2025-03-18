@@ -1,101 +1,141 @@
-import Image from "next/image";
+"use client";
+
+import React, { useEffect, useState } from "react";
+import {
+  Typography,
+  Button,
+  Box,
+  IconButton,
+  Modal,
+} from "@mui/material";
+import { Element } from "react-scroll";
+import About from "@/components/About/About";
+import OurActivities from "@/components/client/OurActivities/OurActivities";
+import WhatsAppIcon from "@mui/icons-material/WhatsApp";
+import EmailIcon from "@mui/icons-material/Email";
+import FacebookIcon from "@mui/icons-material/Facebook";
+import CloseIcon from "@mui/icons-material/Close";
+import PhoneIcon from "@mui/icons-material/Phone";
+import NotificationAlert from "@/components/client/Notification/NotificationAlert";
+import HeroSection from "@/components/client/HeroSection/HeroSection";
+import Navbar from "@/components/client/Navbar/Navbar";
+import Footer from "@/components/client/Footer/Footer";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "@/lib/firebaseConfig";
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [contactOpen, setContactOpen] = useState(false);
+  const [alertMessage, setAlertMessage] = useState("");
+  const [mounted, setMounted] = useState(false);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+  useEffect(() => {
+    // Mark component as mounted
+    setMounted(true);
+
+    const fetchNotification = async () => {
+      try {
+        const docRef = doc(db, "notification", "iZyxBa9DvQc1RdmI2JXu");
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+          setAlertMessage(docSnap.data().alert);
+        } else {
+          console.log("No notification found!");
+        }
+      } catch (error) {
+        console.error("Error fetching notification:", error);
+      }
+    };
+
+    fetchNotification();
+  }, []);
+
+  // Render a common layout for both server and client
+  return (
+    <>
+      {/* Only render Box after component is mounted to avoid hydration issues */}
+      {mounted ? (
+        <Box
+          sx={{
+            height: { md: "100%" },
+            width: { md: "100%" },
+          }}
         >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+          <Navbar setContactOpen={setContactOpen} />
+
+          {/* Render Notification Only on Client */}
+          {alertMessage && (
+            <Box sx={{ position: "fixed", top: 72, width: "100%", zIndex: 1100 }}>
+              <NotificationAlert text={alertMessage} />
+            </Box>
+          )}
+
+          <Element name="hero-section">
+            <HeroSection />
+          </Element>
+
+          <Element name="about">
+            <About />
+          </Element>
+
+          <Element name="our-activities">
+            <OurActivities />
+          </Element>
+
+          {/* Contact Popup Modal */}
+          <Modal open={contactOpen} onClose={() => setContactOpen(false)}>
+            <Box
+              sx={{
+                position: "absolute",
+                top: "50%",
+                left: "50%",
+                transform: "translate(-50%, -50%)",
+                width: 300,
+                bgcolor: "white",
+                boxShadow: 24,
+                p: 3,
+                borderRadius: 2,
+                textAlign: "center",
+              }}
+            >
+              <IconButton
+                onClick={() => setContactOpen(false)}
+                sx={{ position: "absolute", top: 8, right: 8, color: "black" }}
+              >
+                <CloseIcon />
+              </IconButton>
+              <Typography variant="h6" sx={{ fontWeight: "bold", mb: 2 }}>
+                Contact Us
+              </Typography>
+              <Box display="flex" alignItems="center" sx={{ mb: 1 }}>
+                <PhoneIcon sx={{ color: "green", mr: 1 }} />
+                <Typography>9645501703</Typography>
+              </Box>
+              <Box display="flex" alignItems="center" sx={{ mb: 1 }}>
+                <WhatsAppIcon sx={{ color: "green", mr: 1 }} />
+                <Button href="https://wa.me/9645501703" target="_blank">
+                  WhatsApp
+                </Button>
+              </Box>
+              <Box display="flex" alignItems="center" sx={{ mb: 1 }}>
+                <EmailIcon sx={{ color: "red", mr: 1 }} />
+                <Button href="mailto:bagathsighkalavedi@gmail.com">
+                  bagathsighkalavedi
+                </Button>
+              </Box>
+              <Box display="flex" alignItems="center">
+                <FacebookIcon sx={{ color: "#3b5998", mr: 1 }} />
+                <Button href="https://facebook.com/bkvpage" target="_blank">
+                  Facebook
+                </Button>
+              </Box>
+            </Box>
+          </Modal>
+          <Footer />
+        </Box>
+      ) : (
+        <div style={{ visibility: "hidden" }}>Loading...</div>
+      )}
+    </>
   );
 }

@@ -1,6 +1,12 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { Noto_Sans_Malayalam } from "next/font/google";
+
+const malayalamFont = Noto_Sans_Malayalam({
+  weight: "700",
+  subsets: ["malayalam"],
+});
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
