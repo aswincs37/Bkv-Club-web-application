@@ -98,6 +98,7 @@ const MemberRegistration = () => {
   });
   // Add these new states
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [affidavitChecked, setAffidavitChecked] = useState(false);
   const [submissionError, setSubmissionError] = useState("");
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
   const [registeredMemberId, setRegisteredMemberId] = useState("");
@@ -108,6 +109,11 @@ const MemberRegistration = () => {
   const handleClosePopup = () => {
     setShowSuccessPopup(false);
   };
+//affidavit checkbox
+  const handleCheckboxChange = () => {
+    setAffidavitChecked((prev) => !prev);
+  };
+
   // Function to get the next member ID
   const getNextMemberId = async () => {
     try {
@@ -1120,6 +1126,27 @@ const MemberRegistration = () => {
               {formStep === 1 && renderStep1()}
               {formStep === 2 && renderStep2()}
               {formStep === 3 && renderStep3()}
+              {/* ✅ Affidavit Section */}
+        {formStep === totalSteps && (
+          <div className="mt-8 bg-gray-100 p-6 rounded-lg border">
+            <Typography variant="body1" sx={{ fontWeight: 'bold', mb: 2 }}>
+              Affidavit
+            </Typography>
+
+            <div className="flex items-start">
+              <input
+                type="checkbox"
+                id="affidavit"
+                checked={affidavitChecked}
+                onChange={handleCheckboxChange}
+                className="mr-2 mt-1 w-5 h-5 accent-blue-600 cursor-pointer"
+              />
+              <label htmlFor="affidavit" className="text-sm text-gray-700">
+                I hereby certify that the information given above is true and that I am working in accordance with the rules and regulations of the Kalavedi. If my performance is not efficient, I may be subject to disciplinary action by the Committee.
+              </label>
+            </div>
+          </div>
+        )}
               <div>
               {stepErrorMessage && (
   <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
@@ -1179,19 +1206,21 @@ const MemberRegistration = () => {
                     </motion.button>
                   ) : (
                     <motion.button
-                      whileHover={{ scale: isSubmitting ? 1 : 1.05 }}
-                      whileTap={{ scale: isSubmitting ? 1 : 0.95 }}
-                      type="submit"
-                      disabled={isSubmitting}
-                      className={`px-6 py-2 text-white rounded-lg transition duration-300
-        ${
-          isSubmitting
-            ? "bg-green-400 cursor-not-allowed"
-            : "bg-green-600 hover:bg-green-700"
-        }`}
-                    >
-                      {isSubmitting ? "Submitting..." : "Submit Registration"}
-                    </motion.button>
+                    whileHover={{ scale: affidavitChecked ? 1.05 : 1 }}
+                    whileTap={{ scale: affidavitChecked ? 0.95 : 1 }}
+                    type="submit"
+                    disabled={!affidavitChecked || isSubmitting}
+                    className={`
+                      px-6 py-2 rounded-lg transition duration-300 text-white
+                      ${
+                        !affidavitChecked || isSubmitting
+                          ? "bg-gray-400 cursor-not-allowed opacity-50"   // ✅ Explicit disabled styling
+                          : "bg-green-600 hover:bg-green-700"
+                      }
+                    `}
+                  >
+                    {isSubmitting ? "Submitting..." : "Submit Registration"}
+                  </motion.button>
                   )}
                 </div>
               </div>

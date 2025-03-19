@@ -141,46 +141,55 @@ const Footer = () => {
           </Grid>
 
           {/* Quick Links */}
-          <Grid item xs={12} sm={6} md={4}>
-            <Typography
-              variant="h6"
-              sx={{
-                fontWeight: 700,
-                mb: 2,
-                fontSize: { xs: '1.1rem', md: '1.25rem' },
-                color: "#333"
-              }}
-            >
-              Quick Links
-            </Typography>
-            <Grid container spacing={1}>
-              {['About Us', 'Our Activities', 'Member Registration',].map((item) => (
-                <Grid item xs={isMobile ? 6 : (isTablet ? 6 : 12)} key={item}>
-                  <Link
-                    href="#"
-                    style={{
-                      textDecoration: 'none',
-                    }}
-                  >
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        color: "text.secondary",
-                        transition: "all 0.2s ease",
-                        "&:hover": {
-                          color: "#007BFF",
-                          paddingLeft: "4px"
-                        },
-                        display: "inline-block"
-                      }}
-                    >
-                      {item}
-                    </Typography>
-                  </Link>
-                </Grid>
-              ))}
-            </Grid>
-          </Grid>
+
+
+<Grid item xs={12} sm={6} md={4}>
+  <Typography
+    variant="h6"
+    sx={{
+      fontWeight: 700,
+      mb: 2,
+      fontSize: { xs: '1.1rem', md: '1.25rem' },
+      color: "#333"
+    }}
+  >
+    Quick Links
+  </Typography>
+
+  <Grid container spacing={1}>
+    {/* Use an array with paths */}
+    {[
+      { label: 'Home', path: '/' },
+      { label: 'Member Registration', path: '/member-registration' },
+      { label: 'Registration Status', path: '/registration-status' }
+    ].map((link) => (
+      <Grid item xs={isMobile ? 6 : (isTablet ? 6 : 12)} key={link.label}>
+
+        {/* Next.js Link for navigation */}
+        <Link href={link.path} passHref>
+          <Typography
+            variant="body2"
+            sx={{
+              color: "text.secondary",
+              transition: "all 0.2s ease",
+              "&:hover": {
+                color: "#007BFF",
+                paddingLeft: "4px"
+              },
+              display: "inline-block",
+              textDecoration: "none",
+              cursor: "pointer"
+            }}
+          >
+            {link.label}
+          </Typography>
+        </Link>
+
+      </Grid>
+    ))}
+  </Grid>
+</Grid>
+
 
           {/* Contact Info */}
           <Grid item xs={12} sm={6} md={4}>
@@ -218,7 +227,7 @@ const Footer = () => {
                   variant="body2"
                   sx={{ color: "text.secondary" }}
                 >
-                  Vazhakkad,Vaikom,Kottayan, Kerala
+                  Vazhakkad,Vaikom,Kottayan, Kerala-686607
                 </Typography>
               </Box>
               <Box

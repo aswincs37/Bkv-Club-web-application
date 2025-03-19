@@ -500,7 +500,7 @@ const OurActivities = () => {
        </Grid>
 
        {/* Enhanced View More Button */}
-       <Fade in={true} timeout={2000}>
+       {/* <Fade in={true} timeout={2000}>
          <Box sx={{ display: "flex", justifyContent: "center", mt: 5 }}>
            <Button
              variant="contained"
@@ -529,7 +529,7 @@ const OurActivities = () => {
              Explore All Activities
            </Button>
          </Box>
-       </Fade>
+       </Fade> */}
      </Container>
 
      {/* Enhanced Modal for Full Details */}

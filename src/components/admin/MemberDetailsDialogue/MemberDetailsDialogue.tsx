@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogTitle, Button, IconButton, Stack } from '@mui/material';
-import { Check, X, FileText, Ban, XCircle, ZoomIn, ZoomOut } from 'lucide-react';
+import { Dialog, DialogContent, DialogTitle, Button, IconButton, Stack, TextField, CircularProgress } from '@mui/material';
+import { Check, X, FileText, Ban, XCircle, ZoomIn, ZoomOut, Save } from 'lucide-react';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebaseConfig';
 import Image from 'next/image';
@@ -27,6 +27,12 @@ const MemberDetailsDialog: React.FC<MemberDetailsDialogProps> = ({
   const [currentImage, setCurrentImage] = useState<string | null>(null);
   const [imageType, setImageType] = useState<string>('');
   const [zoomLevel, setZoomLevel] = useState(1);
+
+  // States for message and loading
+  const [showMessageField, setShowMessageField] = useState(false);
+  const [decision, setDecision] = useState<'accepted' | 'rejected' | 'banned' | null>(null);
+  const [message, setMessage] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
 
   if (!member) return null;
 
@@ -59,6 +65,45 @@ const MemberDetailsDialog: React.FC<MemberDetailsDialogProps> = ({
   // Function to decrease zoom
   const zoomOut = () => {
     setZoomLevel(prev => Math.max(prev - 0.25, 0.5)); // Min zoom 0.5x
+  };
+
+  // Function to handle status update button clicks
+  const handleStatusButtonClick = (status: 'accepted' | 'rejected' | 'banned') => {
+    setDecision(status);
+    setShowMessageField(true);
+  };
+
+  // Save message to Firebase and update status
+  const handleSaveMessage = async () => {
+    if (!member || !decision) return;
+
+    setIsSaving(true);
+
+    try {
+      const memberRef = doc(db, 'members', member.id);
+      await updateDoc(memberRef, {
+        status: decision,
+        message: message.trim() || '',  // Save message field
+      });
+
+      // Call the onStatusUpdate function to reflect the new status
+      await onStatusUpdate(member.id, decision);
+
+      setShowMessageField(false);
+      setMessage('');
+      setDecision(null);
+    } catch (error) {
+      console.error('Error updating Firestore:', error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Function to cancel the message entry
+  const handleCancelMessage = () => {
+    setShowMessageField(false);
+    setMessage('');
+    setDecision(null);
   };
 
   return (
@@ -245,54 +290,95 @@ const MemberDetailsDialog: React.FC<MemberDetailsDialogProps> = ({
             </div>
           </div>
 
-{/* Action Buttons */}
-<Stack spacing={2} direction={'row'} justifyContent={'center'} className="mt-6">
-  {/* Show Accept button only if status is pending or rejected */}
-  {(member.status === 'pending' || member.status === 'rejected') && (
-    <Button
-      variant="contained"
-      onClick={() => onStatusUpdate(member.id, 'accepted')}
-      className="bg-green-500 hover:bg-green-600 text-white"
-      startIcon={<Check className="h-4 w-4" />}
-    >
-      Accept Member
-    </Button>
-  )}
+          {/* Message field when decision is made */}
+          {showMessageField && (
+            <div className="mt-6 bg-white p-4 rounded-lg border">
+              <h3 className="font-semibold text-lg mb-2">
+                Leave a message for this {decision === 'accepted' ? 'acceptance' :
+                                          decision === 'rejected' ? 'rejection' : 'cancellation'}
+              </h3>
+              <TextField
+                fullWidth
+                label="Enter message (Optional)"
+                multiline
+                rows={3}
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                variant="outlined"
+                className="mb-4"
+              />
+              <div className="flex justify-end space-x-2">
+                <Button
+                  variant="outlined"
+                  onClick={handleCancelMessage}
+                  className="border-gray-300 text-gray-700"
+                  disabled={isSaving}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="contained"
+                  onClick={handleSaveMessage}
+                  disabled={isSaving}
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                  startIcon={isSaving ? <CircularProgress size={20} /> : <Save />}
+                >
+                  {isSaving ? 'Saving...' : 'Save and Update Status'}
+                </Button>
+              </div>
+            </div>
+          )}
 
-  {/* Show Reject button only if status is pending or accepted */}
-  {(member.status === 'pending' || member.status === 'accepted') && (
-    <Button
-      variant="contained"
-      onClick={() => onStatusUpdate(member.id, 'rejected')}
-      className="bg-red-500 hover:bg-red-600 text-white"
-      startIcon={<X className="h-4 w-4" />}
-    >
-      Reject Member
-    </Button>
-  )}
+          {/* Action Buttons - Only show when not in message mode */}
+          {!showMessageField && (
+            <Stack spacing={2} direction={'row'} justifyContent={'center'} className="mt-6">
+              {/* Show Accept button only if status is pending or rejected */}
+              {(member.status === 'pending' || member.status === 'rejected') && (
+                <Button
+                  variant="contained"
+                  onClick={() => handleStatusButtonClick('accepted')}
+                  className="bg-green-500 hover:bg-green-600 text-white"
+                  startIcon={<Check className="h-4 w-4" />}
+                >
+                  Accept Member
+                </Button>
+              )}
 
-  {/* Show Cancel Registration button only if status is accepted */}
-  {member.status === 'accepted' && (
-    <Button
-      variant="contained"
-      onClick={() => onStatusUpdate(member.id, 'banned')}
-      className="bg-purple-500 hover:bg-purple-600 text-white"
-      startIcon={<Ban className="h-4 w-4" />}
-    >
-      Cancel Registration
-    </Button>
-  )}
+              {/* Show Reject button only if status is pending or accepted */}
+              {(member.status === 'pending' || member.status === 'accepted') && (
+                <Button
+                  variant="contained"
+                  onClick={() => handleStatusButtonClick('rejected')}
+                  className="bg-red-500 hover:bg-red-600 text-white"
+                  startIcon={<X className="h-4 w-4" />}
+                >
+                  Reject Member
+                </Button>
+              )}
 
-  {/* Show PDF button in all cases */}
-  <Button
-    variant="outlined"
-    onClick={() => onGeneratePDF(member)}
-    className="border-blue-500 text-blue-500 hover:bg-blue-50"
-    startIcon={<FileText className="h-4 w-4" />}
-  >
-    Generate PDF
-  </Button>
-</Stack>
+              {/* Show Cancel Registration button only if status is accepted */}
+              {member.status === 'accepted' && (
+                <Button
+                  variant="contained"
+                  onClick={() => handleStatusButtonClick('banned')}
+                  className="bg-purple-500 hover:bg-purple-600 text-white"
+                  startIcon={<Ban className="h-4 w-4" />}
+                >
+                  Cancel Registration
+                </Button>
+              )}
+
+              {/* Show PDF button in all cases */}
+              <Button
+                variant="outlined"
+                onClick={() => onGeneratePDF(member)}
+                className="border-blue-500 text-blue-500 hover:bg-blue-50"
+                startIcon={<FileText className="h-4 w-4" />}
+              >
+                Generate PDF
+              </Button>
+            </Stack>
+          )}
         </DialogContent>
       </Dialog>
 
