@@ -13,7 +13,7 @@ import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import { useRouter } from "next/navigation";
-import { collection, getDocs, orderBy, query } from "firebase/firestore";
+import { collection, getDocs, orderBy, query, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebaseConfig";
 
 // Enhanced gradient animation
@@ -95,15 +95,15 @@ interface Activity {
     url: string; // Adding full-size image URL
     uploadedAt: string;
   }[];
-  createdAt: any;
-  updatedAt: any;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
 }
 const OurActivities = () => {
-  const router = useRouter();
+
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
   const [activities, setActivities] = useState<Activity[]>([]);
-  const [_, setLoading] = useState<boolean>(true);
-  const [__, setError] = useState<string | null>(null);
+  const setLoading = useState<boolean>(true)[1];
+  const setError = useState<string | null>(null)[1];
   const [activeIndex, setActiveIndex] = useState(0);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));

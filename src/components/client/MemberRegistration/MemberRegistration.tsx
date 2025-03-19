@@ -100,8 +100,8 @@ const MemberRegistration = () => {
   // Add these new states
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [affidavitChecked, setAffidavitChecked] = useState(false);
-  const [_, setSubmissionError] = useState("");
-  const [__, setSubmissionSuccess] = useState(false);
+  const setSubmissionError = useState("")[1];
+  const setSubmissionSuccess = useState(false)[1];
   const [registeredMemberId, setRegisteredMemberId] = useState("");
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [stepErrorMessage, setStepErrorMessage] = useState("");
@@ -221,16 +221,17 @@ const MemberRegistration = () => {
   };
   const totalSteps = 3;
 
-  const handleChange = (e: {
-    target: { files?: any; name?: any; value?: any; type?: any };
-  }) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
 
     // Clear the step error message when user makes changes
     setStepErrorMessage("");
 
     if (type === "file") {
-      const file = e.target.files?.[0];
+      // File inputs can only be HTMLInputElement
+      const fileInput = e.target as HTMLInputElement;
+      const files = fileInput.files;
+      const file = files?.[0];
 
       if (file) {
         // Check file size (4MB = 4 * 1024 * 1024 bytes)
@@ -259,7 +260,7 @@ const MemberRegistration = () => {
 
         // Create and set preview
         const reader = new FileReader();
-        reader.onload = (e) => {
+        reader.onload = (e: ProgressEvent<FileReader>) => {
           const target = e.target;
           if (target && target.result) {
             setPreviews((prev) => ({
