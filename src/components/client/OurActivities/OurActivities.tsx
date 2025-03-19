@@ -3,12 +3,12 @@ import { useState, useEffect, SetStateAction } from "react";
 import {
   Box, Typography, Grid, Card, CardContent, Modal,
   IconButton, keyframes, useMediaQuery, useTheme,
-  Button, Container, Fade, Zoom, Chip, Avatar
+   Container, Fade, Zoom, Chip, Avatar
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
-import PeopleAltIcon from "@mui/icons-material/PeopleAlt";
+
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
@@ -23,70 +23,66 @@ const gradientAnimation = keyframes`
   100% { background-position: 0% 0%; }
 `;
 
-// Floating animation for cards
-const floatAnimation = keyframes`
-  0% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
-  100% { transform: translateY(0px); }
-`;
-
 // Shine effect animation
 const shineAnimation = keyframes`
   0% { left: -100%; }
   50%, 100% { left: 100%; }
 `;
-
+interface Photo {
+  url?: string;
+  thumbnailUrl?: string;
+}
 // Activity data with multiple images
-const activities = [
-  {
-    images: ["/about-images/bkv-1.jpg", "/about-images/bkv-2.jpg", "/about-images/bkv-3.jpg"],
-    title: "Cultural Festival",
-    subtitle: "Celebrating Arts & Traditions",
-    year: "2023",
-    participants: "500+",
-    description: "A grand festival celebrating art, music, and dance. Featuring talented artists from all around. This event brings together various performers from different regions, giving them a platform to showcase their skills. With live music, drama, and dance performances, the festival aims to promote cultural diversity and unity among communities. The event also includes food stalls, traditional arts and crafts exhibitions, and interactive sessions with renowned artists."
-  },
-  {
-    images: ["/about-images/bkv-4.jpg", "/about-images/bkv-5.jpg", "/about-images/bkv-6.jpg"],
-    title: "Annual Sports Meet",
-    subtitle: "Promoting Athletic Excellence",
-    year: "2023",
-    participants: "300+",
-    description: "Encouraging youth participation in various sports and games to promote a healthy lifestyle. The event includes running races, football tournaments, badminton, and relay races. We also conduct motivational sessions by professional athletes who share their journey to success. Every year, we witness an increase in participation, which is a testament to the growing enthusiasm for sports in our community."
-  },
-  {
-    images: ["/about-images/bkv-7.jpg", "/about-images/bkv-8.jpg", "/about-images/bkv-9.jpg"],
-    title: "Community Service",
-    subtitle: "Giving Back to Society",
-    year: "2023",
-    participants: "200+",
-    description: "Organizing charity events, blood donation camps, and volunteering activities for social good. Our community service programs aim to uplift the underprivileged and create awareness about important social issues. Activities include free health check-up camps, educational support for children, and environmental conservation initiatives such as tree plantation drives."
-  },
-  {
-    images: ["/about-images/bkv-1.jpg", "/about-images/bkv-2.jpg", "/about-images/bkv-3.jpg"],
-    title: "Art Exhibition",
-    subtitle: "Showcasing Local Talent",
-    year: "2022",
-    participants: "150+",
-    description: "A grand festival celebrating art, music, and dance. Featuring talented artists from all around. This event brings together various performers from different regions, giving them a platform to showcase their skills. With live music, drama, and dance performances, the festival aims to promote cultural diversity and unity among communities. The event also includes food stalls, traditional arts and crafts exhibitions, and interactive sessions with renowned artists."
-  },
-  {
-    images: ["/about-images/bkv-4.jpg", "/about-images/bkv-5.jpg", "/about-images/bkv-6.jpg"],
-    title: "Youth Conference",
-    subtitle: "Shaping Tomorrow's Leaders",
-    year: "2022",
-    participants: "250+",
-    description: "Encouraging youth participation in various sports and games to promote a healthy lifestyle. The event includes running races, football tournaments, badminton, and relay races. We also conduct motivational sessions by professional athletes who share their journey to success. Every year, we witness an increase in participation, which is a testament to the growing enthusiasm for sports in our community."
-  },
-  {
-    images: ["/about-images/bkv-7.jpg", "/about-images/bkv-8.jpg", "/about-images/bkv-9.jpg"],
-    title: "Charity Fundraiser",
-    subtitle: "Supporting Local Causes",
-    year: "2022",
-    participants: "400+",
-    description: "Organizing charity events, blood donation camps, and volunteering activities for social good. Our community service programs aim to uplift the underprivileged and create awareness about important social issues. Activities include free health check-up camps, educational support for children, and environmental conservation initiatives such as tree plantation drives."
-  }
-];
+// const activities = [
+//   {
+//     images: ["/about-images/bkv-1.jpg", "/about-images/bkv-2.jpg", "/about-images/bkv-3.jpg"],
+//     title: "Cultural Festival",
+//     subtitle: "Celebrating Arts & Traditions",
+//     year: "2023",
+//     participants: "500+",
+//     description: "A grand festival celebrating art, music, and dance. Featuring talented artists from all around. This event brings together various performers from different regions, giving them a platform to showcase their skills. With live music, drama, and dance performances, the festival aims to promote cultural diversity and unity among communities. The event also includes food stalls, traditional arts and crafts exhibitions, and interactive sessions with renowned artists."
+//   },
+//   {
+//     images: ["/about-images/bkv-4.jpg", "/about-images/bkv-5.jpg", "/about-images/bkv-6.jpg"],
+//     title: "Annual Sports Meet",
+//     subtitle: "Promoting Athletic Excellence",
+//     year: "2023",
+//     participants: "300+",
+//     description: "Encouraging youth participation in various sports and games to promote a healthy lifestyle. The event includes running races, football tournaments, badminton, and relay races. We also conduct motivational sessions by professional athletes who share their journey to success. Every year, we witness an increase in participation, which is a testament to the growing enthusiasm for sports in our community."
+//   },
+//   {
+//     images: ["/about-images/bkv-7.jpg", "/about-images/bkv-8.jpg", "/about-images/bkv-9.jpg"],
+//     title: "Community Service",
+//     subtitle: "Giving Back to Society",
+//     year: "2023",
+//     participants: "200+",
+//     description: "Organizing charity events, blood donation camps, and volunteering activities for social good. Our community service programs aim to uplift the underprivileged and create awareness about important social issues. Activities include free health check-up camps, educational support for children, and environmental conservation initiatives such as tree plantation drives."
+//   },
+//   {
+//     images: ["/about-images/bkv-1.jpg", "/about-images/bkv-2.jpg", "/about-images/bkv-3.jpg"],
+//     title: "Art Exhibition",
+//     subtitle: "Showcasing Local Talent",
+//     year: "2022",
+//     participants: "150+",
+//     description: "A grand festival celebrating art, music, and dance. Featuring talented artists from all around. This event brings together various performers from different regions, giving them a platform to showcase their skills. With live music, drama, and dance performances, the festival aims to promote cultural diversity and unity among communities. The event also includes food stalls, traditional arts and crafts exhibitions, and interactive sessions with renowned artists."
+//   },
+//   {
+//     images: ["/about-images/bkv-4.jpg", "/about-images/bkv-5.jpg", "/about-images/bkv-6.jpg"],
+//     title: "Youth Conference",
+//     subtitle: "Shaping Tomorrow's Leaders",
+//     year: "2022",
+//     participants: "250+",
+//     description: "Encouraging youth participation in various sports and games to promote a healthy lifestyle. The event includes running races, football tournaments, badminton, and relay races. We also conduct motivational sessions by professional athletes who share their journey to success. Every year, we witness an increase in participation, which is a testament to the growing enthusiasm for sports in our community."
+//   },
+//   {
+//     images: ["/about-images/bkv-7.jpg", "/about-images/bkv-8.jpg", "/about-images/bkv-9.jpg"],
+//     title: "Charity Fundraiser",
+//     subtitle: "Supporting Local Causes",
+//     year: "2022",
+//     participants: "400+",
+//     description: "Organizing charity events, blood donation camps, and volunteering activities for social good. Our community service programs aim to uplift the underprivileged and create awareness about important social issues. Activities include free health check-up camps, educational support for children, and environmental conservation initiatives such as tree plantation drives."
+//   }
+// ];
 // Interface for activity data
 interface Activity {
   id: string;
@@ -106,14 +102,12 @@ const OurActivities = () => {
   const router = useRouter();
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
   const [activities, setActivities] = useState<Activity[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [sliderReady, setSliderReady] = useState(false);
-
+  const [_, setLoading] = useState<boolean>(true);
+  const [__, setError] = useState<string | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
-  const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));
+  //const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));
 
   //const [selectedActivity, setSelectedActivity] = useState<null | typeof activities[number]>(null);
 
@@ -138,7 +132,7 @@ const OurActivities = () => {
           title: data.title || "No Title",
           description: data.description || "No Description",
           date: data.date || "",
-          photos: (data.photos || []).map((photo: any) => ({
+          photos: (data.photos || []).map((photo: Photo) => ({
             ...photo,
             url: photo.url || photo.thumbnailUrl // Make sure we have a full-size URL
           })),
@@ -470,13 +464,13 @@ const OurActivities = () => {
                      {activity.title}
                    </Typography>
 
-                   <Typography variant="body2" sx={{
+                   {/* <Typography variant="body2" sx={{
                      color: "text.secondary",
                      mb: 1.5,
                      fontStyle: "italic"
                    }}>
                      {activity.description}
-                   </Typography>
+                   </Typography> */}
 
                    <Typography
                      variant="body2"

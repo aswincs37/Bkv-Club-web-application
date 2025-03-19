@@ -10,9 +10,9 @@ import {
   InputAdornment,
   IconButton,
   CircularProgress,
-  useMediaQuery
+  Link,
 } from '@mui/material';
-import { ThemeProvider, createTheme, useTheme } from '@mui/material/styles';
+import { ThemeProvider, createTheme,  } from '@mui/material/styles';
 import {
   Visibility,
   VisibilityOff,
@@ -22,8 +22,9 @@ import {
 } from '@mui/icons-material';
 
 import { useRouter } from 'next/navigation';
-import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
+import {signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '@/lib/firebaseConfig';
+import { FirebaseError } from 'firebase/app';
 
 // Assuming firebase is initialized elsewhere in your app
 // If not, you'll need to add the initialization code
@@ -36,8 +37,6 @@ const AdminLoginPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const adminTheme = createTheme({
     palette: {
@@ -123,15 +122,18 @@ const AdminLoginPage: React.FC = () => {
 
       // On successful login
       router.push("/admin-home");
-    } catch (err: any) {
-      if (err.code === "auth/user-not-found" || err.code === "auth/wrong-password") {
-        setError("Invalid email or password");
-      } else if (err.code === "auth/too-many-requests") {
-        setError("Too many failed login attempts. Please try again later.");
+    } catch (err) {
+      if (err instanceof FirebaseError) {   // Use FirebaseError for type safety
+        if (err.code === "auth/user-not-found" || err.code === "auth/wrong-password") {
+          setError("Invalid email or password");
+        } else if (err.code === "auth/too-many-requests") {
+          setError("Too many failed login attempts. Please try again later.");
+        } else {
+          setError("Invalid email or password");
+        }
       } else {
-        setError("Invalid email or password");
+        setError("An unexpected error occurred.");
       }
-
     } finally {
       setLoading(false);
     }
@@ -154,26 +156,23 @@ const AdminLoginPage: React.FC = () => {
             </div>
           </div>
           <div>
-            <a
-              href="/"
-              className="px-4 py-2 bg-white text-blue-700 rounded-lg font-medium hover:bg-blue-100 transition duration-300 flex items-center"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5 mr-1"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-                />
-              </svg>
-              Home
-            </a>
+          <Link href="/" className="px-4 py-2 bg-white text-blue-700 rounded-lg font-medium hover:bg-blue-100 transition duration-300 flex items-center">
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    className="h-5 w-5 mr-1"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+    />
+  </svg>
+  Home
+</Link>
           </div>
         </div>
       </div>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, ChangeEvent } from 'react';
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
-import { Search, Plus, X, Upload, Image, Trash2, Edit } from 'lucide-react';
+import { Search, Plus, X,  Image, Trash2, Edit } from 'lucide-react';
 import {
   collection,
   addDoc,
@@ -12,7 +12,8 @@ import {
   serverTimestamp,
   where,
   updateDoc,
-  getDoc
+  getDoc,
+  Timestamp
 } from 'firebase/firestore';
 import { db } from '@/lib/firebaseConfig';
 
@@ -30,7 +31,7 @@ interface Activity {
   description: string;
   date: string;
   photos: Photo[];
-  createdAt?: any;
+  createdAt?: Timestamp;
 }
 
 interface PhotoPreview {
@@ -185,16 +186,6 @@ const AddActivity = () => {
     }
   };
 
-  // Helper function to convert File to Base64
-  // const fileToBase64 = (file: File): Promise<string> => {
-  //   return new Promise((resolve, reject) => {
-  //     const reader = new FileReader();
-  //     reader.readAsDataURL(file);
-  //     reader.onload = () => resolve(reader.result as string);
-  //     reader.onerror = (error) => reject(error);
-  //   });
-  // };
-
   const compressImage = (file: File, maxWidth = 600, maxHeight = 600, maxSize = 950000): Promise<string> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -293,15 +284,7 @@ const createThumbnail = async (file: File, size = 200): Promise<string> => {
   });
 };
 
-// Convert file to Base64
-const fileToBase64 = (file: File): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = (error) => reject(error);
-  });
-};
+
 
 // Process all photos for an activity with higher quality
 const processPhotos = async (): Promise<Photo[]> => {
@@ -451,40 +434,39 @@ const processPhotos = async (): Promise<Photo[]> => {
         });
       }
 
-      // Delete removed photo documents
-      if (existingPhotos.length < activities.find(a => a.id === currentActivityId)?.photos.length!) {
-        // Find photos that were removed
-        const currentActivity = activities.find(a => a.id === currentActivityId);
-        const removedIndices: number[] = [];
+// Delete removed photo documents
+const currentActivity = activities.find(a => a.id === currentActivityId);
+if (currentActivity && existingPhotos.length < currentActivity.photos.length) {
+  // Find photos that were removed
+  const removedIndices: number[] = [];
 
-        if (currentActivity) {
-          currentActivity.photos.forEach((photo, idx) => {
-            // If this photo isn't in existingPhotos array, it was removed
-            const stillExists = existingPhotos.some(p =>
-              p.name === photo.name && p.uploadedAt === photo.uploadedAt
-            );
+  currentActivity.photos.forEach((photo, idx) => {
+    // If this photo isn't in existingPhotos array, it was removed
+    const stillExists = existingPhotos.some(p =>
+      p.name === photo.name && p.uploadedAt === photo.uploadedAt
+    );
 
-            if (!stillExists) {
-              removedIndices.push(idx);
-            }
-          });
-        }
+    if (!stillExists) {
+      removedIndices.push(idx);
+    }
+  });
 
-        // Delete the corresponding documents
-        for (const idx of removedIndices) {
-          const deletedPhotoQuery = query(
-            collection(db, 'activityPhotos'),
-            where('activityId', '==', currentActivityId),
-            where('photoIndex', '==', idx)
-          );
+  // Delete the corresponding documents
+  for (const idx of removedIndices) {
+    const deletedPhotoQuery = query(
+      collection(db, 'activityPhotos'),
+      where('activityId', '==', currentActivityId),
+      where('photoIndex', '==', idx)
+    );
 
-          const deletedPhotoSnapshot = await getDocs(deletedPhotoQuery);
+    const deletedPhotoSnapshot = await getDocs(deletedPhotoQuery);
 
-          if (!deletedPhotoSnapshot.empty) {
-            await deleteDoc(deletedPhotoSnapshot.docs[0].ref);
-          }
-        }
-      }
+    if (!deletedPhotoSnapshot.empty) {
+      await deleteDoc(deletedPhotoSnapshot.docs[0].ref);
+    }
+  }
+}
+
 
       // Reset form
       resetForm();
@@ -707,15 +689,16 @@ const processPhotos = async (): Promise<Photo[]> => {
 
                 {/* Upload new photos area */}
 {/* For selecting from files */}
-<input
-  type="file"
-  accept="image/*"
-  multiple
-  onChange={handlePhotoSelect}
-  className="hidden"
-  id="photo-upload-files"
-  key={`files-${Date.now()}`}
-/>
+  {/* Upload new photos area */}
+  <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handlePhotoSelect}
+                  className="hidden"
+                  id="photo-upload-files"
+                  key={`files-${Date.now()}`}
+                />
 
 {/* For taking photos with camera */}
 {/* <input

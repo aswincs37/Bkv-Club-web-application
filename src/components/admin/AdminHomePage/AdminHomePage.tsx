@@ -14,6 +14,7 @@ import AddActivity from '../AddActivity/AddActivity';
 import MemberDetailsDialog from '@/components/admin/MemberDetailsDialogue/MemberDetailsDialogue';
 import StatusNotification from '../StatusNotification/StatusNotification';
 import { generatePDF } from '../printPDF/generatePDF';
+import NextImage from 'next/image';
 
 
 // Enhanced Member interface to match your Firestore structure
@@ -205,11 +206,13 @@ export default function AdminDashboard() {
         {/* Navigation */}
         <nav className="bg-white shadow-md p-4">
           <div className="container mx-auto flex justify-between items-center relative">
-
+         
             {/* Left Section - Logo */}
             <div className="flex items-center space-x-2">
-              <img
-                src="/logo.png"  // Replace with your logo path
+              <NextImage
+               height={80}
+               width={80}
+                src="/logo.png"
                 alt="BKV Logo"
                 className="h-15 w-12"
               />

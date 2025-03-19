@@ -9,8 +9,6 @@ import {
   Modal,
   IconButton,
   keyframes,
-  useMediaQuery,
-  useTheme,
   Button,
   Stack,
   Container,
@@ -34,16 +32,14 @@ const shineAnimation = keyframes`
 
 const About = () => {
   const images = [
-    "/about-images/bkv-1.jpg",
+    "/about-images/bkv-4.jpg",
     "/about-images/bkv-2.jpg",
-    "/about-images/bkv-2.jpg",
     "/about-images/bkv-1.jpg",
+    "/about-images/bkv-3.jpg",
+
   ];
 
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));
 
   const handleOpenImage = (src: string) => setSelectedImage(src);
 

@@ -237,7 +237,7 @@ const MemberDetailsDialog: React.FC<MemberDetailsDialogProps> = ({
                       <span className="font-medium">Blood Group:</span> {member.bloodGroup}
                     </div>
                     <div>
-                      <span className="font-medium">Father's Name:</span> {member.fatherName}
+                      <span className="font-medium">Father Name:</span> {member.fatherName}
                     </div>
                   </div>
                 </div>

@@ -1,4 +1,3 @@
-import MemberRegistration from '@/components/client/MemberRegistration/MemberRegistration';
 import OurActivities from '@/components/client/OurActivities/OurActivities';
 import React from 'react'
 

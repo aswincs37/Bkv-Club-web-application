@@ -9,7 +9,7 @@ import {
   Modal,
 } from "@mui/material";
 import { Element } from "react-scroll";
-import About from "@/components/About/About";
+import About from "@/components/client/About/About";
 import OurActivities from "@/components/client/OurActivities/OurActivities";
 import WhatsAppIcon from "@mui/icons-material/WhatsApp";
 import EmailIcon from "@mui/icons-material/Email";

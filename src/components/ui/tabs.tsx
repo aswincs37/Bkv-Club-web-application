@@ -1,4 +1,5 @@
 import * as React from "react";
+import clsx from "clsx";  // Import clsx for class merging
 
 type TabsProps = React.HTMLAttributes<HTMLDivElement> & {
   defaultValue?: string;
@@ -8,17 +9,14 @@ type TabsProps = React.HTMLAttributes<HTMLDivElement> & {
 
 const Tabs = React.forwardRef<HTMLDivElement, TabsProps>(
   ({ className, defaultValue, value, onValueChange, ...props }, ref) => {
-    // If it's a controlled component (with value), use that, otherwise use internal state
     const [tabValue, setTabValue] = React.useState(defaultValue || "");
 
-    // Handle tab selection
     React.useEffect(() => {
       if (value !== undefined) {
         setTabValue(value);
       }
     }, [value]);
 
-    // Create context to share the value and setter
     const contextValue = React.useMemo(
       () => ({
         value: value !== undefined ? value : tabValue,
@@ -34,14 +32,13 @@ const Tabs = React.forwardRef<HTMLDivElement, TabsProps>(
 
     return (
       <TabsContext.Provider value={contextValue}>
-        <div ref={ref} className="w-full" {...props} />
+        <div ref={ref} className={clsx("w-full", className)} {...props} />
       </TabsContext.Provider>
     );
   }
 );
 Tabs.displayName = "Tabs";
 
-// Create context for tabs
 type TabsContextValue = {
   value: string;
   onValueChange: (value: string) => void;
@@ -63,7 +60,7 @@ const TabsList = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className="inline-flex items-center justify-center rounded-md bg-gray-100 p-1"
+    className={clsx("inline-flex items-center justify-center rounded-md bg-gray-100 p-1", className)}
     {...props}
   />
 ));
@@ -83,7 +80,10 @@ const TabsTrigger = React.forwardRef<
       ref={ref}
       data-state={isActive ? "active" : "inactive"}
       data-value={value}
-      className="inline-flex items-center justify-center rounded-sm px-3 py-1.5 text-sm font-medium transition-all data-[state=active]:bg-white data-[state=active]:shadow-sm hover:bg-gray-50"
+      className={clsx(
+        "inline-flex items-center justify-center rounded-sm px-3 py-1.5 text-sm font-medium transition-all data-[state=active]:bg-white data-[state=active]:shadow-sm hover:bg-gray-50",
+        className
+      )}
       onClick={() => onValueChange(value)}
       {...props}
     />
@@ -107,7 +107,7 @@ const TabsContent = React.forwardRef<
       ref={ref}
       data-state={isSelected ? "active" : "inactive"}
       data-value={value}
-      className="mt-2 ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 focus-visible:ring-offset-2"
+      className={clsx("mt-2 ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 focus-visible:ring-offset-2", className)}
       {...props}
     />
   );

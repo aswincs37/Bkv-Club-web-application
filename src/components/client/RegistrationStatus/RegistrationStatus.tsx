@@ -8,7 +8,6 @@ import {
   Paper,
   Container,
   CircularProgress,
-  Alert,
   Card,
   CardContent,
   Divider
@@ -19,11 +18,12 @@ import PendingIcon from '@mui/icons-material/Pending';
 import CancelIcon from '@mui/icons-material/Cancel';
 import DownloadIcon from '@mui/icons-material/Download';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
-import { collection, doc, getDoc, getDocs, query, where } from 'firebase/firestore';
+import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '@/lib/firebaseConfig';
 import { jsPDF } from "jspdf";
 import "jspdf-autotable";
 import { UserX } from 'lucide-react';
+import Link from 'next/link';
 
 // Define the theme
 const theme = createTheme({
@@ -438,7 +438,9 @@ const checkRegistrationStatus = async (memberId: string): Promise<RegistrationSt
             return Promise.reject("Registration ID not found");
         }
     } catch (error) {
+        console.log(error)
         return Promise.reject("Error fetching registration status");
+
     }
 };
 
@@ -526,6 +528,7 @@ const RegistrationStatus: React.FC = () => {
       const result = await checkRegistrationStatus(registrationId);
       setStatus(result);
     } catch (err) {
+      console.log(err);
       setError('Registration ID not found. Please check and try again.');
     } finally {
       setLoading(false);
@@ -590,26 +593,23 @@ const RegistrationStatus: React.FC = () => {
             </div>
           </div>
           <div>
-            <a
-              href="/"
-              className="px-4 py-2 bg-white text-blue-700 rounded-lg font-medium hover:bg-blue-100 transition duration-300 flex items-center"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5 mr-1"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-                />
-              </svg>
-              Home
-            </a>
+          <Link href="/" className="px-4 py-2 bg-white text-blue-700 rounded-lg font-medium hover:bg-blue-100 transition duration-300 flex items-center">
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    className="h-5 w-5 mr-1"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+    />
+  </svg>
+  Home
+</Link>
           </div>
         </div>
       </div>

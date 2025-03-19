@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
 import { Box, Typography } from "@mui/material";
-import { Chilanka, Manjari } from "next/font/google";
+import {  Manjari } from "next/font/google";
 
 interface NotificationAlertProps {
   text: string;
@@ -27,6 +27,7 @@ const NotificationAlert: React.FC<NotificationAlertProps> = ({ text }) => {
 
         setContainerWidth(containerW);
         setTextWidth(textW);
+        console.log(containerWidth,textWidth)
       }
     };
 

@@ -16,6 +16,7 @@ import SuccessPopup from "../../SuccessPopup/SuccessPopup";
 import { getAuth, signInAnonymously } from "firebase/auth";
 import { Button, Typography } from "@mui/material";
 import { useRouter } from 'next/navigation';
+import Link from "next/link";
 
 const MemberRegistration = () => {
   const router = useRouter();
@@ -99,8 +100,8 @@ const MemberRegistration = () => {
   // Add these new states
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [affidavitChecked, setAffidavitChecked] = useState(false);
-  const [submissionError, setSubmissionError] = useState("");
-  const [submissionSuccess, setSubmissionSuccess] = useState(false);
+  const [_, setSubmissionError] = useState("");
+  const [__, setSubmissionSuccess] = useState(false);
   const [registeredMemberId, setRegisteredMemberId] = useState("");
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [stepErrorMessage, setStepErrorMessage] = useState("");
@@ -329,7 +330,7 @@ const MemberRegistration = () => {
     }
   };
 
-  const checkIfMemberExists = async (email: any, phoneNumber: any) => {
+  const checkIfMemberExists = async (email: string, phoneNumber: string) => {
     try {
       // Check if the email exists
       const emailQuery = query(
@@ -515,7 +516,7 @@ const MemberRegistration = () => {
 
     try {
       // Check if member already exists one final time before submission
-    const existingMember = await checkIfMemberExists(formData.email, formData.phoneNumber);
+    //const existingMember = await checkIfMemberExists(formData.email, formData.phoneNumber);
 
     // if (existingMember.exists) {
     //   setStepErrorMessage(
@@ -666,7 +667,7 @@ const MemberRegistration = () => {
         </div>
 
         <div className="form-group">
-          <label className="block text-gray-700 mb-2">Father's Name</label>
+          <label className="block text-gray-700 mb-2">Father Name</label>
           <input
             type="text"
             name="fatherName"
@@ -1083,26 +1084,23 @@ const MemberRegistration = () => {
             </div>
           </div>
           <div>
-            <a
-              href="/"
-              className="px-4 py-2 bg-white text-blue-700 rounded-lg font-medium hover:bg-blue-100 transition duration-300 flex items-center"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5 mr-1"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-                />
-              </svg>
-              Home
-            </a>
+          <Link href="/" className="px-4 py-2 bg-white text-blue-700 rounded-lg font-medium hover:bg-blue-100 transition duration-300 flex items-center">
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    className="h-5 w-5 mr-1"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+    />
+  </svg>
+  Home
+</Link>
           </div>
         </div>
       </div>

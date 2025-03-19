@@ -1,5 +1,5 @@
-// components/ui/card.tsx
 import * as React from "react";
+import clsx from "clsx";  // Import clsx for class merging
 
 const Card = React.forwardRef<
   HTMLDivElement,
@@ -7,7 +7,7 @@ const Card = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className="bg-white rounded-lg border shadow-sm"
+    className={clsx("bg-white rounded-lg border shadow-sm", className)}
     {...props}
   />
 ));
@@ -19,7 +19,7 @@ const CardHeader = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className="flex flex-col space-y-1.5 p-6"
+    className={clsx("flex flex-col space-y-1.5 p-6", className)}
     {...props}
   />
 ));
@@ -31,7 +31,7 @@ const CardTitle = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <h3
     ref={ref}
-    className="text-lg font-semibold"
+    className={clsx("text-lg font-semibold", className)}
     {...props}
   />
 ));
@@ -41,10 +41,8 @@ const CardContent = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
 >(({ className, ...props }, ref) => (
-  <div ref={ref} className="p-6 pt-0" {...props} />
+  <div ref={ref} className={clsx("p-6 pt-0", className)} {...props} />
 ));
 CardContent.displayName = "CardContent";
 
 export { Card, CardHeader, CardTitle, CardContent };
-
-
