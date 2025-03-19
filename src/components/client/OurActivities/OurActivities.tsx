@@ -13,6 +13,8 @@ import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import { useRouter } from "next/navigation";
+import { collection, getDocs, orderBy, query } from "firebase/firestore";
+import { db } from "@/lib/firebaseConfig";
 
 // Enhanced gradient animation
 const gradientAnimation = keyframes`
@@ -85,15 +87,88 @@ const activities = [
     description: "Organizing charity events, blood donation camps, and volunteering activities for social good. Our community service programs aim to uplift the underprivileged and create awareness about important social issues. Activities include free health check-up camps, educational support for children, and environmental conservation initiatives such as tree plantation drives."
   }
 ];
-
+// Interface for activity data
+interface Activity {
+  id: string;
+  title: string;
+  description: string;
+  date: string;
+  photos: {
+    name: string;
+    thumbnailUrl: string;
+    url: string; // Adding full-size image URL
+    uploadedAt: string;
+  }[];
+  createdAt: any;
+  updatedAt: any;
+}
 const OurActivities = () => {
   const router = useRouter();
-  const [selectedActivity, setSelectedActivity] = useState<null | typeof activities[number]>(null);
+  const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
+  const [activities, setActivities] = useState<Activity[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [sliderReady, setSliderReady] = useState(false);
 
   const [activeIndex, setActiveIndex] = useState(0);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));
+
+  //const [selectedActivity, setSelectedActivity] = useState<null | typeof activities[number]>(null);
+
+
+ // Fetch activities from Firestore
+ useEffect(() => {
+  const fetchActivities = async () => {
+    try {
+      setLoading(true);
+      const activitiesQuery = query(
+        collection(db, "activities"),
+        orderBy("createdAt", "desc")
+      );
+
+      const querySnapshot = await getDocs(activitiesQuery);
+      const activitiesData: Activity[] = [];
+
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        activitiesData.push({
+          id: doc.id,
+          title: data.title || "No Title",
+          description: data.description || "No Description",
+          date: data.date || "",
+          photos: (data.photos || []).map((photo: any) => ({
+            ...photo,
+            url: photo.url || photo.thumbnailUrl // Make sure we have a full-size URL
+          })),
+          createdAt: data.createdAt,
+          updatedAt: data.updatedAt
+        });
+      });
+      setActivities(activitiesData);
+      // Initialize visibility array with correct length
+      // setVisible(new Array(activitiesData.length).fill(false));
+
+      // // Give time for the DOM to update before checking visibility
+      // setTimeout(() => {
+      //   setSliderReady(true);
+      // }, 500);
+
+    } catch (err) {
+      console.error("Error fetching activities: ", err);
+      setError("Failed to load activities. Please try again later.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchActivities().catch(err => {
+    console.error("Unhandled promise rejection in fetchActivities:", err);
+    setError("Failed to load activities. Please try again later.");
+    setLoading(false);
+  });
+}, []);
 
   const handleOpenModal = (activity: typeof activities[number]) => {
     setSelectedActivity(activity);
@@ -317,10 +392,10 @@ const OurActivities = () => {
                   {/* Enhanced mini-carousel inside each card */}
                   <Box sx={{ position: "relative" }}>
                     <Slider {...cardSliderSettings}>
-                      {activity.images.map((img, idx) => (
+                      {activity.photos.map((img, idx) => (
                         <Box key={idx} sx={{ position: "relative", height: { xs: 180, sm: 200, md: 220 } }}>
                           <img
-                            src={img}
+                               src={img.url || img.thumbnailUrl}
                             alt={activity.title}
                             style={{
                               width: "100%",
@@ -348,7 +423,7 @@ const OurActivities = () => {
                     {/* Year chip positioned on image */}
                     <Chip
                      avatar={<Avatar sx={{ bgcolor: "transparent" }}><CalendarTodayIcon fontSize="small" /></Avatar>}
-                     label={activity.year}
+                     label={activity.date}
                      sx={{
                        position: "absolute",
                        top: 10,
@@ -363,7 +438,7 @@ const OurActivities = () => {
                    />
 
                    {/* Participants chip positioned on image */}
-                   <Chip
+                   {/* <Chip
                      avatar={<Avatar sx={{ bgcolor: "transparent" }}><PeopleAltIcon fontSize="small" /></Avatar>}
                      label={activity.participants}
                      sx={{
@@ -377,7 +452,7 @@ const OurActivities = () => {
                        border: "1px solid rgba(255,255,255,0.3)",
                        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
                      }}
-                   />
+                   /> */}
                  </Box>
 
                  <CardContent className="card-content" sx={{
@@ -400,7 +475,7 @@ const OurActivities = () => {
                      mb: 1.5,
                      fontStyle: "italic"
                    }}>
-                     {activity.subtitle}
+                     {activity.description}
                    </Typography>
 
                    <Typography
@@ -510,10 +585,10 @@ const OurActivities = () => {
                  overflow: "hidden",
                }}>
                  <Slider {...modalSliderSettings}>
-                   {selectedActivity.images.map((img, index) => (
+                   {selectedActivity.photos.map((img, index) => (
                      <Box key={index} sx={{ position: "relative" }}>
                        <img
-                         src={img}
+                            src={img.url || img.thumbnailUrl}
                          alt={selectedActivity.title}
                          style={{
                            width: "100%",
@@ -536,31 +611,31 @@ const OurActivities = () => {
                    overflow: "auto",
                  }}
                >
-                 <Typography variant="overline" sx={{ color: "#7f0000", fontWeight: 600, letterSpacing: 1 }}>
-                   {selectedActivity.year}
-                 </Typography>
+                 {/* <Typography variant="overline" sx={{ color: "#7f0000", fontWeight: 600, letterSpacing: 1 }}>
+                   {selectedActivity.date}
+                 </Typography> */}
 
                  <Typography variant="h4" sx={{ fontWeight: "bold", mb: 1, color: "#1a1a1a" }}>
                    {selectedActivity.title}
                  </Typography>
-
+{/*
                  <Typography variant="subtitle1" sx={{ color: "#666666", mb: 3, fontStyle: "italic" }}>
                    {selectedActivity.subtitle}
-                 </Typography>
+                 </Typography> */}
 
                  <Box sx={{ display: "flex", gap: 2, mb: 3, flexWrap: "wrap" }}>
                    <Chip
                      icon={<CalendarTodayIcon />}
-                     label={`Year: ${selectedActivity.year}`}
+                     label={`Year: ${selectedActivity.date}`}
                      color="primary"
                      variant="outlined"
                    />
-                   <Chip
+                   {/* <Chip
                      icon={<PeopleAltIcon />}
                      label={`Participants: ${selectedActivity.participants}`}
                      color="primary"
                      variant="outlined"
-                   />
+                   /> */}
                  </Box>
 
                  <Typography variant="h6" sx={{ fontWeight: 600, mb: 1, color: "#333333" }}>
