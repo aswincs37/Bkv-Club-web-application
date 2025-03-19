@@ -186,65 +186,20 @@ const AddActivity = () => {
   };
 
   // Helper function to convert File to Base64
-  const fileToBase64 = (file: File): Promise<string> => {
+  // const fileToBase64 = (file: File): Promise<string> => {
+  //   return new Promise((resolve, reject) => {
+  //     const reader = new FileReader();
+  //     reader.readAsDataURL(file);
+  //     reader.onload = () => resolve(reader.result as string);
+  //     reader.onerror = (error) => reject(error);
+  //   });
+  // };
+
+  const compressImage = (file: File, maxWidth = 600, maxHeight = 600, maxSize = 950000): Promise<string> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = (error) => reject(error);
-    });
-  };
 
-  // Helper function to compress image before upload
-  const compressImage = (file: File, maxWidth = 800): Promise<File> => {
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = (e) => {
-        const imgElement = document.createElement('img');
-        if (e.target?.result) {
-          imgElement.src = e.target.result as string;
-        }
-
-        imgElement.onload = () => {
-          const canvas = document.createElement('canvas');
-          let width = imgElement.width;
-          let height = imgElement.height;
-
-          // Scale down if width is greater than maxWidth
-          if (width > maxWidth) {
-            height = Math.floor(height * (maxWidth / width));
-            width = maxWidth;
-          }
-
-          canvas.width = width;
-          canvas.height = height;
-
-          const ctx = canvas.getContext('2d');
-          ctx?.drawImage(imgElement, 0, 0, width, height);
-
-          // Convert to blob with reduced quality
-          canvas.toBlob((blob) => {
-            if (blob) {
-              const newFile = new File([blob], file.name, {
-                type: 'image/jpeg',
-                lastModified: Date.now(),
-              });
-              resolve(newFile);
-            } else {
-              resolve(file); // Fallback to original file if compression fails
-            }
-          }, 'image/jpeg', 0.7); // Adjust quality (0.7 = 70%)
-        };
-      };
-    });
-  };
-
-  // Create a small thumbnail for preview
-  const createThumbnail = async (file: File, size = 100): Promise<string> => {
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
       reader.onload = (e) => {
         const imgElement = document.createElement('img');
         imgElement.src = e.target?.result as string;
@@ -253,64 +208,134 @@ const AddActivity = () => {
           const canvas = document.createElement('canvas');
           const ctx = canvas.getContext('2d');
 
-          canvas.width = size;
-          canvas.height = size;
+          let width = imgElement.width;
+          let height = imgElement.height;
 
-          // Calculate dimensions to maintain aspect ratio
-          const scale = Math.min(size / imgElement.width, size / imgElement.height);
-          const x = (size - imgElement.width * scale) / 2;
-          const y = (size - imgElement.height * scale) / 2;
+          // Resize based on maxWidth and maxHeight
+          if (width > maxWidth) {
+            height = Math.floor(height * (maxWidth / width));
+            width = maxWidth;
+          }
+          if (height > maxHeight) {
+            width = Math.floor(width * (maxHeight / height));
+            height = maxHeight;
+          }
 
-          // Fill with white background
-          ctx!.fillStyle = '#ffffff';
-          ctx!.fillRect(0, 0, size, size);
+          canvas.width = width;
+          canvas.height = height;
 
-          // Draw image centered and scaled
-          ctx!.drawImage(imgElement, x, y, imgElement.width * scale, imgElement.height * scale);
+          ctx?.drawImage(imgElement, 0, 0, width, height);
 
-          // Get data URL with reduced quality
-          resolve(canvas.toDataURL('image/jpeg', 0.5));
+          // **Dynamic quality adjustment loop**
+          const compressAndCheckSize = (quality: number) => {
+            canvas.toBlob(
+              async (blob) => {
+                if (blob && blob.size <= maxSize) {
+                  const reader = new FileReader();
+                  reader.readAsDataURL(blob);
+                  reader.onloadend = () => {
+                    resolve(reader.result as string);
+                  };
+                } else if (quality > 0.2) {
+                  // Retry with lower quality if size exceeds limit
+                  compressAndCheckSize(quality - 0.1);
+                } else {
+                  reject(new Error("Image compression failed to fit size limit."));
+                }
+              },
+              "image/webp", // Use webp format for better compression
+              quality
+            );
+          };
+
+          // Start compression at 0.8 quality
+          compressAndCheckSize(0.8);
         };
+
+        imgElement.onerror = () => reject(new Error("Error loading image"));
       };
+
+      reader.onerror = () => reject(new Error("Error reading file"));
     });
   };
 
-  // Process all photos for an activity - create separate documents for each photo
-  const processPhotos = async (): Promise<Photo[]> => {
-    if (photoFiles.length === 0) return [];
 
-    const photoData: Photo[] = [];
-    let progress = 0;
-    const increment = 100 / photoFiles.length;
+// Create a high-quality thumbnail for preview
+const createThumbnail = async (file: File, size = 200): Promise<string> => {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (e) => {
+      const imgElement = document.createElement('img');
+      imgElement.src = e.target?.result as string;
 
-    for (let i = 0; i < photoFiles.length; i++) {
-      try {
-        // Compress image first
-        const compressedFile = await compressImage(photoFiles[i]);
+      imgElement.onload = () => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
 
-        // Convert to Base64 (but we'll only store a small preview in the main document)
-        const base64String = await fileToBase64(compressedFile);
+        canvas.width = size;
+        canvas.height = size;
 
-        // Create photo object with smaller thumbnail preview
-        const photo: Photo = {
-          name: photoFiles[i].name,
-          uploadedAt: new Date().toISOString(),
-          // Store a data URI thumbnail instead of full image
-          thumbnailUrl: await createThumbnail(compressedFile, 100), // 100px thumbnail
-          url: base64String
-        };
+        // Calculate dimensions to maintain aspect ratio
+        const scale = Math.min(size / imgElement.width, size / imgElement.height);
+        const x = (size - imgElement.width * scale) / 2;
+        const y = (size - imgElement.height * scale) / 2;
 
-        photoData.push(photo);
+        ctx!.fillStyle = '#ffffff';
+        ctx!.fillRect(0, 0, size, size);
 
-        progress += increment;
-        setPhotoUploadProgress(Math.min(Math.round(progress), 100));
-      } catch (error) {
-        console.error('Error processing photo:', error);
-      }
+        ctx!.drawImage(imgElement, x, y, imgElement.width * scale, imgElement.height * scale);
+
+        // Use PNG format with 100% quality
+        resolve(canvas.toDataURL('image/png', 1.0));
+      };
+    };
+  });
+};
+
+// Convert file to Base64
+const fileToBase64 = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = (error) => reject(error);
+  });
+};
+
+// Process all photos for an activity with higher quality
+const processPhotos = async (): Promise<Photo[]> => {
+  if (photoFiles.length === 0) return [];
+
+  const photoData: Photo[] = [];
+  let progress = 0;
+  const increment = 100 / photoFiles.length;
+
+  for (let i = 0; i < photoFiles.length; i++) {
+    try {
+      // Compress and encode to Base64 with dynamic quality
+      const base64String = await compressImage(photoFiles[i]);
+
+      const photo: Photo = {
+        name: photoFiles[i].name,
+        uploadedAt: new Date().toISOString(),
+        thumbnailUrl: await createThumbnail(photoFiles[i], 150),  // Small thumbnail for preview
+        url: base64String  // Compressed image as Base64
+      };
+
+      photoData.push(photo);
+
+      progress += increment;
+      setPhotoUploadProgress(Math.min(Math.round(progress), 100));
+    } catch (error) {
+      console.error('Error processing photo:', error);
     }
+  }
 
-    return photoData;
-  };
+  return photoData;
+};
+
+
 
   // Add new activity
   const addActivity = async () => {

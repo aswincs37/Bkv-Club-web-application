@@ -4,33 +4,8 @@ import { Check, X, FileText, Ban, XCircle, ZoomIn, ZoomOut } from 'lucide-react'
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebaseConfig';
 import Image from 'next/image';
+import { Member } from '../AdminHomePage/AdminHomePage';
 
-interface Member {
-  id: string;
-  fullName: string;
-  email: string;
-  status: 'pending' | 'accepted' | 'rejected' | 'banned';
-  date?: string;
-  phoneNumber: string;
-  address: string;
-  age: string;
-  bloodGroup: string;
-  fatherName: string;
-  gender: string;
-  hasCriminalCase: string;
-  hobbies: string;
-  isClubMember: string;
-  job: string;
-  memberId: string;
-  nomineeName: string;
-  education: string;
-  createdBy: string;
-  profilePhoto?: string;
-  idPhoto?: string;
-  signaturePhoto?: string;
-  signatureUrl?:string;
-  photoUrl?: string;
-}
 
 interface MemberDetailsDialogProps {
   member: Member | null;

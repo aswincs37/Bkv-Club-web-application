@@ -13,10 +13,11 @@ import UpdateNotificationAlert from '../UpdateNotificationAlert/UpdateNotificati
 import AddActivity from '../AddActivity/AddActivity';
 import MemberDetailsDialog from '@/components/admin/MemberDetailsDialogue/MemberDetailsDialogue';
 import StatusNotification from '../StatusNotification/StatusNotification';
+import { generatePDF } from '../printPDF/generatePDF';
 
 
 // Enhanced Member interface to match your Firestore structure
-interface Member {
+export interface Member {
   id: string;
   fullName: string;
   email: string;
@@ -38,8 +39,11 @@ interface Member {
   createdBy: string;
   profilePhoto?: string;
   idPhoto?: string;
-  signature?: string;
+  signaturePhoto?: string;
+  signatureUrl?:string;
+  photoUrl?: string;
 }
+
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -169,10 +173,8 @@ export default function AdminDashboard() {
 
 
   // Generate PDF for member (placeholder function)
-  const generatePDF = (member: Member) => {
-    console.log("Generating PDF for member:", member.fullName);
-    // Implement PDF generation logic here
-    alert(`PDF generated for ${member.fullName}`);
+  const handleGeneratePDF = (member: Member) => {
+    generatePDF(member);
   };
 
   const handleLogout = async () => {
@@ -211,9 +213,11 @@ export default function AdminDashboard() {
                 alt="BKV Logo"
                 className="h-15 w-12"
               />
-             <h1 className="text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl font-bold text-gray-800">
-  BHAGATH SINGH KALAVEDHÍ VAZHAKKAD (BKV)
+             <h1 className="sm:text-lg md:text-lg lg:text-xl xl:text-2xl font-bold text-gray-800">
+  <span className="block sm:hidden">B K V</span> {/* Mobile view */}
+  <span className="hidden sm:block">BHAGATH SINGH KALAVEDHÍ VAZHAKKAD (BKV)</span> {/* Tablet and larger */}
 </h1>
+
 
             </div>
 
@@ -415,7 +419,7 @@ export default function AdminDashboard() {
           open={detailsOpen}
           onClose={() => setDetailsOpen(false)}
           onStatusUpdate={updateMemberStatus}
-          onGeneratePDF={generatePDF}
+          onGeneratePDF={handleGeneratePDF}
         />
       </div>
     </>
