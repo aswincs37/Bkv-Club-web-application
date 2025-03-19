@@ -12,7 +12,6 @@ import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
-import { useRouter } from "next/navigation";
 import { collection, getDocs, orderBy, query, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebaseConfig";
 
