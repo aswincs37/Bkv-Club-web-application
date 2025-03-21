@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import { motion } from "framer-motion";
 import Footer from "../Footer/Footer";
 import {
@@ -17,8 +17,14 @@ import { getAuth, signInAnonymously } from "firebase/auth";
 import { Button, Typography } from "@mui/material";
 import { useRouter } from 'next/navigation';
 import Link from "next/link";
+import LanguageSelector, { LanguageContext } from "./languageSelector";
+
+
+
 
 const MemberRegistration = () => {
+  const { t } = useContext(LanguageContext);
+ // const { t} = useLanguage();
   const router = useRouter();
   type ValidationErrorsType = {
     fullName: string;
@@ -238,7 +244,7 @@ const MemberRegistration = () => {
         if (file.size > 4 * 1024 * 1024) {
           setErrorMessages({
             ...errorMessages,
-            [name]: "File size exceeds 4MB limit!",
+            [name]: t("fileSizeLimit"),
           });
           return;
         }
@@ -291,32 +297,31 @@ const MemberRegistration = () => {
         case "age":
           // Only allow numbers
           if (!/^\d*$/.test(value)) {
-            error = "Age must contain only numbers";
+            error = t("ageNumbersOnly");
           } else if (value && parseInt(value) < 18) {
-            error = "Age must be 18 or above";
+            error = t("ageLimit");
           }
           break;
 
         case "phoneNumber":
           // Only allow numbers and check length
           if (!/^\d*$/.test(value)) {
-            error = "Phone number must contain only digits";
+            error = t("phoneNumberDigits");
           } else if (value.length > 0 && value.length !== 10) {
-            error = "Phone number must be exactly 10 digits";
+            error = t("phoneNumberLength");
           }
           break;
 
         case "email":
           // Email validation
           if (value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-            error = "Please enter a valid email address";
+            error = t("invalidEmail");
           }
           break;
 
         default:
           break;
       }
-
       // Update form data with potentially modified value
       setFormData({
         ...formData,
@@ -332,6 +337,8 @@ const MemberRegistration = () => {
   };
 
   const checkIfMemberExists = async (email: string, phoneNumber: string) => {
+   // const { t } = useLanguage();
+
     try {
       // Check if the email exists
       const emailQuery = query(
@@ -345,7 +352,7 @@ const MemberRegistration = () => {
         return {
           exists: true,
           memberId: emailQuerySnapshot.docs[0].data().memberId,
-          field: "email"
+          field: t("email")
         };
       }
 
@@ -361,7 +368,7 @@ const MemberRegistration = () => {
         return {
           exists: true,
           memberId: phoneQuerySnapshot.docs[0].data().memberId,
-          field: "phone number"
+          field: t("phoneNumber")
         };
       }
 
@@ -417,10 +424,10 @@ const MemberRegistration = () => {
       .some((key) => validationErrors[key]);
 
     if (missingFields.length > 0) {
-      setStepErrorMessage("Please fill all required fields before proceeding.");
+      setStepErrorMessage(t("fillRequired"));
       return;
     } else if (hasValidationErrors) {
-      setStepErrorMessage("Please correct the errors before proceeding.");
+      setStepErrorMessage(t("correctErrors"));
       return;
     }
 
@@ -433,7 +440,8 @@ const MemberRegistration = () => {
           if (result.exists) {
 
             setStepErrorMessage(
-              `You are already registered with this ${result.field}. Your member ID is ${result.memberId}. Please check your registration status.`
+               // ` ${result.field}. Your member ID is ${result.memberId}. Please check your registration status.`
+              `${t("alreadyMember")} ${result.field}. ${t("checkStatus")} ${result.memberId}.`
             );
             setStepErrorMessageButton(true)
           } else {
@@ -506,9 +514,7 @@ const MemberRegistration = () => {
     );
 
     if (missingFields.length > 0 || hasValidationErrors) {
-      setStepErrorMessage(
-        "Please complete all required fields correctly before submitting."
-      );
+      setStepErrorMessage(t("completeAllFields"));
       return;
     }
 
@@ -634,253 +640,257 @@ const MemberRegistration = () => {
     transition: { duration: 0.5 },
   };
 
-  const renderStep1 = () => (
-    <motion.div
-      key="step1"
-      initial="initial"
-      animate="animate"
-      exit="exit"
-      variants={fadeInUp}
-      className="space-y-4"
-    >
-      <h2 className="text-xl font-bold text-blue-600 mb-6">
-        Personal Information
-      </h2>
+  const renderStep1 = () => {
+    //const { t } = useLanguage();
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="form-group">
-          <label className="block text-gray-700 mb-2">Full Name</label>
-          <input
-            type="text"
-            name="fullName"
-            value={formData.fullName}
-            onChange={handleChange}
-            className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-              validationErrors.fullName ? "border-red-500" : ""
-            }`}
-            required
-          />
-          {validationErrors.fullName && (
-            <p className="text-red-500 text-sm mt-1">
-              {validationErrors.fullName}
-            </p>
-          )}
-        </div>
+    return (
+      <motion.div
+        key="step1"
+        initial="initial"
+        animate="animate"
+        exit="exit"
+        variants={fadeInUp}
+        className="space-y-4"
+      >
+        <h2 className="text-xl font-bold text-blue-600 mb-6">
+          {t("personalInfo")}
+        </h2>
 
-        <div className="form-group">
-          <label className="block text-gray-700 mb-2">Father Name</label>
-          <input
-            type="text"
-            name="fatherName"
-            value={formData.fatherName}
-            onChange={handleChange}
-            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            required
-          />
-        </div>
-      </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="form-group">
+            <label className="block text-gray-700 mb-2">{t('fullName')}</label>
+            <input
+              type="text"
+              name="fullName"
+              value={formData.fullName}
+              onChange={handleChange}
+              className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                validationErrors.fullName ? "border-red-500" : ""
+              }`}
+              required
+            />
+            {validationErrors.fullName && (
+              <p className="text-red-500 text-sm mt-1">
+                {validationErrors.fullName}
+              </p>
+            )}
+          </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="form-group">
-          <label className="block text-gray-700 mb-2">Age</label>
-          <input
-            type="number"
-            name="age"
-            value={formData.age}
-            onChange={handleChange}
-            className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-              validationErrors.age ? "border-red-500" : ""
-            }`}
-            required
-          />
-          {validationErrors.age && (
-            <p className="text-red-500 text-sm mt-1">{validationErrors.age}</p>
-          )}
-        </div>
-
-        <div className="form-group">
-          <label className="block text-gray-700 mb-2">Gender</label>
-          <div className="flex space-x-4 mt-2">
-            <label className="inline-flex items-center">
-              <input
-                type="radio"
-                name="gender"
-                value="male"
-                checked={formData.gender === "male"}
-                onChange={handleChange}
-                className="form-radio h-5 w-5 text-blue-600"
-              />
-              <span className="ml-2 text-gray-700">Male</span>
-            </label>
-            <label className="inline-flex items-center">
-              <input
-                type="radio"
-                name="gender"
-                value="female"
-                checked={formData.gender === "female"}
-                onChange={handleChange}
-                className="form-radio h-5 w-5 text-blue-600"
-              />
-              <span className="ml-2 text-gray-700">Female</span>
-            </label>
-            <label className="inline-flex items-center">
-              <input
-                type="radio"
-                name="gender"
-                value="other"
-                checked={formData.gender === "other"}
-                onChange={handleChange}
-                className="form-radio h-5 w-5 text-blue-600"
-              />
-              <span className="ml-2 text-gray-700">Other</span>
-            </label>
+          <div className="form-group">
+            <label className="block text-gray-700 mb-2">{t('fatherName')}</label>
+            <input
+              type="text"
+              name="fatherName"
+              value={formData.fatherName}
+              onChange={handleChange}
+              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
           </div>
         </div>
-      </div>
 
-      <div className="form-group">
-        <label className="block text-gray-700 mb-2">Address</label>
-        <textarea
-          name="address"
-          value={formData.address}
-          onChange={handleChange}
-          className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          rows={3}
-          required
-        ></textarea>
-      </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="form-group">
+            <label className="block text-gray-700 mb-2">{t('age')}</label>
+            <input
+              type="number"
+              name="age"
+              value={formData.age}
+              onChange={handleChange}
+              className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                validationErrors.age ? "border-red-500" : ""
+              }`}
+              required
+            />
+            {validationErrors.age && (
+              <p className="text-red-500 text-sm mt-1">{validationErrors.age}</p>
+            )}
+          </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="form-group">
-          <label className="block text-gray-700 mb-2">Blood Group</label>
-          <select
-            name="bloodGroup"
-            value={formData.bloodGroup}
-            onChange={handleChange}
-            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            required
-          >
-            <option value="">Select Blood Group</option>
-            <option value="A+">A+</option>
-            <option value="A-">A-</option>
-            <option value="B+">B+</option>
-            <option value="B-">B-</option>
-            <option value="AB+">AB+</option>
-            <option value="AB-">AB-</option>
-            <option value="O+">O+</option>
-            <option value="O-">O-</option>
-          </select>
+          <div className="form-group">
+            <label className="block text-gray-700 mb-2">{t('gender')}</label>
+            <div className="flex space-x-4 mt-2">
+              <label className="inline-flex items-center">
+                <input
+                  type="radio"
+                  name="gender"
+                  value="male"
+                  checked={formData.gender === "male"}
+                  onChange={handleChange}
+                  className="form-radio h-5 w-5 text-blue-600"
+                />
+                <span className="ml-2 text-gray-700">{t('male')}</span>
+              </label>
+              <label className="inline-flex items-center">
+                <input
+                  type="radio"
+                  name="gender"
+                  value="female"
+                  checked={formData.gender === "female"}
+                  onChange={handleChange}
+                  className="form-radio h-5 w-5 text-blue-600"
+                />
+                <span className="ml-2 text-gray-700">{t('female')}</span>
+              </label>
+              <label className="inline-flex items-center">
+                <input
+                  type="radio"
+                  name="gender"
+                  value="other"
+                  checked={formData.gender === "other"}
+                  onChange={handleChange}
+                  className="form-radio h-5 w-5 text-blue-600"
+                />
+                <span className="ml-2 text-gray-700">{t('other')}</span>
+              </label>
+            </div>
+          </div>
         </div>
 
         <div className="form-group">
-          <label className="block text-gray-700 mb-2">Hobbies</label>
-          <input
-            type="text"
-            name="hobbies"
-            value={formData.hobbies}
+          <label className="block text-gray-700 mb-2">{t('address')}</label>
+          <textarea
+            name="address"
+            value={formData.address}
             onChange={handleChange}
             className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Separated by commas"
+            rows={3}
             required
-          />
+          ></textarea>
         </div>
-      </div>
-    </motion.div>
-  );
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="form-group">
+            <label className="block text-gray-700 mb-2">{t('bloodGroup')}</label>
+            <select
+              name="bloodGroup"
+              value={formData.bloodGroup}
+              onChange={handleChange}
+              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            >
+              <option value="">{t('selectBloodGroup')}</option>
+              <option value="A+">A+</option>
+              <option value="A-">A-</option>
+              <option value="B+">B+</option>
+              <option value="B-">B-</option>
+              <option value="AB+">AB+</option>
+              <option value="AB-">AB-</option>
+              <option value="O+">O+</option>
+              <option value="O-">O-</option>
+            </select>
+          </div>
+
+          <div className="form-group">
+            <label className="block text-gray-700 mb-2">{t('hobbies')}</label>
+            <input
+              type="text"
+              name="hobbies"
+              value={formData.hobbies}
+              onChange={handleChange}
+              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder={t('hobbiesSeparator')}
+              required
+            />
+          </div>
+        </div>
+      </motion.div>
+    );
+  };
 
   const renderStep2 = () => (
     <motion.div
-      key="step2"
-      initial="initial"
-      animate="animate"
-      exit="exit"
-      variants={fadeInUp}
-      className="space-y-4"
-    >
-      <h2 className="text-xl font-bold text-blue-600 mb-6">
-        Contact & Professional Information
-      </h2>
+    key="step2"
+    initial="initial"
+    animate="animate"
+    exit="exit"
+    variants={fadeInUp}
+    className="space-y-4"
+  >
+    <h2 className="text-xl font-bold text-blue-600 mb-6">
+      {t("contactInfo")}
+    </h2>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="form-group">
-          <label className="block text-gray-700 mb-2">Phone Number</label>
-          <input
-            type="tel"
-            name="phoneNumber"
-            value={formData.phoneNumber}
-            onChange={handleChange}
-            className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-              validationErrors.phoneNumber ? "border-red-500" : ""
-            }`}
-            required
-          />
-          {validationErrors.phoneNumber && (
-            <p className="text-red-500 text-sm mt-1">
-              {validationErrors.phoneNumber}
-            </p>
-          )}
-        </div>
-
-        <div className="form-group">
-          <label className="block text-gray-700 mb-2">Email</label>
-          <input
-            type="email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-              validationErrors.email ? "border-red-500" : ""
-            }`}
-            required
-          />
-          {validationErrors.email && (
-            <p className="text-red-500 text-sm mt-1">
-              {validationErrors.email}
-            </p>
-          )}
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="form-group">
-          <label className="block text-gray-700 mb-2">
-            Educational Qualification
-          </label>
-          <input
-            type="text"
-            name="education"
-            value={formData.education}
-            onChange={handleChange}
-            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            required
-          />
-        </div>
-
-        <div className="form-group">
-          <label className="block text-gray-700 mb-2">Current Job</label>
-          <input
-            type="text"
-            name="job"
-            value={formData.job}
-            onChange={handleChange}
-            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            required
-          />
-        </div>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="form-group">
+        <label className="block text-gray-700 mb-2">{t("phoneNumber")}</label>
+        <input
+          type="tel"
+          name="phoneNumber"
+          value={formData.phoneNumber}
+          onChange={handleChange}
+          className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+            validationErrors.phoneNumber ? "border-red-500" : ""
+          }`}
+          required
+        />
+        {validationErrors.phoneNumber && (
+          <p className="text-red-500 text-sm mt-1">
+            {validationErrors.phoneNumber}
+          </p>
+        )}
       </div>
 
       <div className="form-group">
-        <label className="block text-gray-700 mb-2">Nominee Name</label>
+        <label className="block text-gray-700 mb-2">{t("email")}</label>
+        <input
+          type="email"
+          name="email"
+          value={formData.email}
+          onChange={handleChange}
+          className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+            validationErrors.email ? "border-red-500" : ""
+          }`}
+          required
+        />
+        {validationErrors.email && (
+          <p className="text-red-500 text-sm mt-1">
+            {validationErrors.email}
+          </p>
+        )}
+      </div>
+    </div>
+
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="form-group">
+        <label className="block text-gray-700 mb-2">
+          {t("education")}
+        </label>
         <input
           type="text"
-          name="nomineeName"
-          value={formData.nomineeName}
+          name="education"
+          value={formData.education}
           onChange={handleChange}
           className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           required
         />
       </div>
-    </motion.div>
+
+      <div className="form-group">
+        <label className="block text-gray-700 mb-2">{t("job")}</label>
+        <input
+          type="text"
+          name="job"
+          value={formData.job}
+          onChange={handleChange}
+          className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          required
+        />
+      </div>
+    </div>
+
+    <div className="form-group">
+      <label className="block text-gray-700 mb-2">{t("nomineeName")}</label>
+      <input
+        type="text"
+        name="nomineeName"
+        value={formData.nomineeName}
+        onChange={handleChange}
+        className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        required
+      />
+    </div>
+  </motion.div>
   );
 
   const renderStep3 = () => (
@@ -1072,18 +1082,15 @@ const MemberRegistration = () => {
 
       <div className="bg-blue-700 py-3 px-6 shadow-md">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <img
-              src="/logo.png"
-              alt="Club Logo"
-              className="h-15 w-12 rounded-full border-2 border-white"
-            />
-            <div className="flex flex-col">
-              <span className="text-white font-bold text-lg md:text-xl">
-                BHAGATH SINGH KALAVEDHÍ VAZHAKKAD (BKV)
-              </span>
-            </div>
-          </div>
+        <div className="flex items-center space-x-4">
+  <img src="/logo.png" alt="Club Logo" className="h-15 w-12 rounded-full border-2 border-white" />
+  <div className="flex flex-col">
+    <span className="text-white font-bold text-lg md:text-xl">
+      {t("clubName")}
+    </span>
+  </div>
+  <LanguageSelector /> {/* 🌐 Language Switcher */}
+</div>
           <div>
           <Link href="/" className="px-4 py-2 bg-white text-blue-700 rounded-lg font-medium hover:bg-blue-100 transition duration-300 flex items-center">
   <svg
@@ -1100,7 +1107,7 @@ const MemberRegistration = () => {
       d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
     />
   </svg>
-  Home
+  {t('home')}
 </Link>
           </div>
         </div>
@@ -1114,7 +1121,7 @@ const MemberRegistration = () => {
         >
           <div className="bg-blue-600 py-6 px-8">
             <h1 className="text-2xl font-bold text-white text-center">
-              Club Membership Registration Form
+         {t('formTitle')}
             </h1>
           </div>
 
@@ -1129,7 +1136,7 @@ const MemberRegistration = () => {
         {formStep === totalSteps && (
           <div className="mt-8 bg-gray-100 p-6 rounded-lg border">
             <Typography variant="body1" sx={{ fontWeight: 'bold', mb: 2 }}>
-              Affidavit
+              {t("affidavit")}
             </Typography>
 
             <div className="flex items-start">
@@ -1141,7 +1148,7 @@ const MemberRegistration = () => {
                 className="mr-2 mt-1 w-5 h-5 accent-blue-600 cursor-pointer"
               />
               <label htmlFor="affidavit" className="text-sm text-gray-700">
-                I hereby certify that the information given above is true and that I am working in accordance with the rules and regulations of the Kalavedi. If my performance is not efficient, I may be subject to disciplinary action by the Committee.
+             {t("affidavitText")}
               </label>
             </div>
           </div>
@@ -1188,7 +1195,7 @@ const MemberRegistration = () => {
                     onClick={prevStep}
                     className="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition duration-300"
                   >
-                    Previous
+                    {t('previous')}
                   </motion.button>
                 )}
 
@@ -1201,7 +1208,7 @@ const MemberRegistration = () => {
                       onClick={nextStep}
                       className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-300"
                     >
-                      Next
+                      {t('next')}
                     </motion.button>
                   ) : (
                     <motion.button
@@ -1238,3 +1245,5 @@ const MemberRegistration = () => {
 };
 
 export default MemberRegistration;
+
+

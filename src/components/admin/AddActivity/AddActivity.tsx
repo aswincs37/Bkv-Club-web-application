@@ -1,6 +1,6 @@
 import React, { useState, useEffect, ChangeEvent } from 'react';
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
-import { Search, Plus, X,  Image, Trash2, Edit } from 'lucide-react';
+import { Search, Plus, X, Image, Trash2, Edit } from 'lucide-react';
 import {
   collection,
   addDoc,
@@ -19,10 +19,11 @@ import { db } from '@/lib/firebaseConfig';
 
 // Updated Photo interface
 interface Photo {
-  url: string;  // For the full image data (may not be stored in main document)
-  thumbnailUrl: string; // For the small preview
+  url: string;  // Full image URL (from Cloudinary)
+  thumbnailUrl: string; // Thumbnail URL (from Cloudinary)
   name: string;
   uploadedAt: string;
+  publicId: string; // Cloudinary public ID for future management/deletion
 }
 
 interface Activity {
@@ -39,24 +40,29 @@ interface PhotoPreview {
   url: string;
 }
 
+// Your Cloudinary configuration
+const CLOUDINARY_UPLOAD_PRESET = 'activity-photos'; // Create this in your Cloudinary dashboard
+const CLOUDINARY_CLOUD_NAME = 'ddka96xq8';
+const CLOUDINARY_UPLOAD_URL = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`;
+// Add at the beginning of uploadToCloudinary
+console.log('Uploading to Cloudinary with preset:', CLOUDINARY_UPLOAD_PRESET);
+console.log('Cloudinary cloud name:', CLOUDINARY_CLOUD_NAME);
+console.log('Upload URL:', CLOUDINARY_UPLOAD_URL);
 const AddActivity = () => {
-  // State for activities
+  // States remain the same
   const [activities, setActivities] = useState<Activity[]>([]);
   const [showActivityForm, setShowActivityForm] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [isEditMode, setIsEditMode] = useState<boolean>(false);
   const [currentActivityId, setCurrentActivityId] = useState<string | null>(null);
-
-  // State for new activity form
   const [newActivity, setNewActivity] = useState<Omit<Activity, 'id'>>({
     title: '',
     description: '',
     date: '',
     photos: []
   });
-
-  // State for photo uploads
+    const [searchTerm, setSearchTerm] = useState<string>('');
   const [photoFiles, setPhotoFiles] = useState<File[]>([]);
   const [photoUploadProgress, setPhotoUploadProgress] = useState<number>(0);
   const [photoPreview, setPhotoPreview] = useState<PhotoPreview[]>([]);
@@ -67,8 +73,9 @@ const AddActivity = () => {
     fetchActivities();
   }, []);
 
-  // Fetch activities from Firestore
+  // Fetch activities from Firestore - remains the same
   const fetchActivities = async () => {
+    // Same implementation
     setIsLoading(true);
     try {
       const activitiesQuery = query(
@@ -91,35 +98,12 @@ const AddActivity = () => {
     }
   };
 
-  // Function to handle viewing the full-size image
-  const handleViewFullImage = async (activityId: string, photoIndex: number) => {
-    try {
-      // Query the full-size image from the activityPhotos collection
-      const photoQuery = query(
-        collection(db, 'activityPhotos'),
-        where('activityId', '==', activityId),
-        where('photoIndex', '==', photoIndex)
-      );
-
-      const photoSnapshot = await getDocs(photoQuery);
-
-      if (!photoSnapshot.empty) {
-        // Get the first matching document
-        const photoDoc = photoSnapshot.docs[0];
-        const photoData = photoDoc.data();
-
-        // Open the full-size image in a new tab/window
-        const fullImageUrl = photoData.fullImageData;
-        window.open(fullImageUrl, '_blank');
-      } else {
-        console.error('Full-size image not found');
-      }
-    } catch (error) {
-      console.error('Error fetching full-size image:', error);
-    }
+  // Function to handle viewing the full-size image - updated to use direct URLs
+  const handleViewFullImage = (url: string) => {
+    window.open(url, '_blank');
   };
 
-  // Handle photo file selection
+  // Handle photo file selection - remains the same
   const handlePhotoSelect = (e: ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
 
@@ -154,7 +138,7 @@ const AddActivity = () => {
     e.target.value = '';
   };
 
-  // Remove photo from selection
+  // Remove photo from selection - remains the same
   const removePhoto = (index: number) => {
     try {
       const updatedFiles = [...photoFiles];
@@ -175,7 +159,7 @@ const AddActivity = () => {
     }
   };
 
-  // Remove existing photo when in edit mode
+  // Remove existing photo when in edit mode - remains the same
   const removeExistingPhoto = (index: number) => {
     try {
       const updatedPhotos = [...existingPhotos];
@@ -186,108 +170,70 @@ const AddActivity = () => {
     }
   };
 
-  const compressImage = (file: File, maxWidth = 600, maxHeight = 600, maxSize = 950000): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
+  // NEW FUNCTION: Upload to Cloudinary
+// Updated Cloudinary upload function with folder structure
+const uploadToCloudinary = async (file: File, activityTitle: string): Promise<{ url: string, thumbnailUrl: string, publicId: string }> => {
+  return new Promise((resolve, reject) => {
+    console.log('Starting Cloudinary upload for file:', file.name);
 
-      reader.onload = (e) => {
-        const imgElement = document.createElement('img');
-        imgElement.src = e.target?.result as string;
+    // Create a sanitized folder name from the activity title
+    const folderName = activityTitle
+      .toLowerCase()
+      .replace(/[^\w\s]/gi, '') // Remove special characters
+      .replace(/\s+/g, '-');     // Replace spaces with hyphens
 
-        imgElement.onload = () => {
-          const canvas = document.createElement('canvas');
-          const ctx = canvas.getContext('2d');
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
 
-          let width = imgElement.width;
-          let height = imgElement.height;
+    // Add folder parameter
+    formData.append('folder', `activities/${folderName}`);
 
-          // Resize based on maxWidth and maxHeight
-          if (width > maxWidth) {
-            height = Math.floor(height * (maxWidth / width));
-            width = maxWidth;
-          }
-          if (height > maxHeight) {
-            width = Math.floor(width * (maxHeight / height));
-            height = maxHeight;
-          }
+    console.log('Upload URL:', CLOUDINARY_UPLOAD_URL);
+    console.log('Upload preset:', CLOUDINARY_UPLOAD_PRESET);
+    console.log('Upload folder:', `activities/${folderName}`);
 
-          canvas.width = width;
-          canvas.height = height;
+    fetch(CLOUDINARY_UPLOAD_URL, {
+      method: 'POST',
+      body: formData
+    })
+    .then(response => {
+      if (!response.ok) {
+        console.error('Cloudinary server error:', response.status, response.statusText);
+        return response.text().then(text => {
+          throw new Error(`Cloudinary API error: ${response.status} ${text}`);
+        });
+      }
+      return response.json();
+    })
+    .then(data => {
+      console.log('Cloudinary response:', data);
 
-          ctx?.drawImage(imgElement, 0, 0, width, height);
+      if (!data.secure_url) {
+        console.error('Cloudinary response missing secure_url:', data);
+        reject(new Error('Invalid Cloudinary response - missing secure_url'));
+        return;
+      }
 
-          // **Dynamic quality adjustment loop**
-          const compressAndCheckSize = (quality: number) => {
-            canvas.toBlob(
-              async (blob) => {
-                if (blob && blob.size <= maxSize) {
-                  const reader = new FileReader();
-                  reader.readAsDataURL(blob);
-                  reader.onloadend = () => {
-                    resolve(reader.result as string);
-                  };
-                } else if (quality > 0.2) {
-                  // Retry with lower quality if size exceeds limit
-                  compressAndCheckSize(quality - 0.1);
-                } else {
-                  reject(new Error("Image compression failed to fit size limit."));
-                }
-              },
-              "image/webp", // Use webp format for better compression
-              quality
-            );
-          };
+      const fullUrl = data.secure_url;
+      // For thumbnail, we'll create a transformation URL manually
+      const thumbnailUrl = fullUrl.replace('/upload/', '/upload/c_fill,h_150,w_150/');
 
-          // Start compression at 0.8 quality
-          compressAndCheckSize(0.8);
-        };
-
-        imgElement.onerror = () => reject(new Error("Error loading image"));
-      };
-
-      reader.onerror = () => reject(new Error("Error reading file"));
+      resolve({
+        url: fullUrl,
+        thumbnailUrl: thumbnailUrl,
+        publicId: data.public_id || ''
+      });
+    })
+    .catch(error => {
+      console.error('Error uploading to Cloudinary:', error);
+      reject(error);
     });
-  };
-
-
-// Create a high-quality thumbnail for preview
-const createThumbnail = async (file: File, size = 200): Promise<string> => {
-  return new Promise((resolve) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = (e) => {
-      const imgElement = document.createElement('img');
-      imgElement.src = e.target?.result as string;
-
-      imgElement.onload = () => {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-
-        canvas.width = size;
-        canvas.height = size;
-
-        // Calculate dimensions to maintain aspect ratio
-        const scale = Math.min(size / imgElement.width, size / imgElement.height);
-        const x = (size - imgElement.width * scale) / 2;
-        const y = (size - imgElement.height * scale) / 2;
-
-        ctx!.fillStyle = '#ffffff';
-        ctx!.fillRect(0, 0, size, size);
-
-        ctx!.drawImage(imgElement, x, y, imgElement.width * scale, imgElement.height * scale);
-
-        // Use PNG format with 100% quality
-        resolve(canvas.toDataURL('image/png', 1.0));
-      };
-    };
   });
 };
-
-
-
-// Process all photos for an activity with higher quality
-const processPhotos = async (): Promise<Photo[]> => {
+  // Process all photos for an activity with Cloudinary
+// Updated processPhotos function
+const processPhotos = async (activityTitle: string): Promise<Photo[]> => {
   if (photoFiles.length === 0) return [];
 
   const photoData: Photo[] = [];
@@ -296,14 +242,15 @@ const processPhotos = async (): Promise<Photo[]> => {
 
   for (let i = 0; i < photoFiles.length; i++) {
     try {
-      // Compress and encode to Base64 with dynamic quality
-      const base64String = await compressImage(photoFiles[i]);
+      // Upload to Cloudinary with folder path
+      const { url, thumbnailUrl, publicId } = await uploadToCloudinary(photoFiles[i], activityTitle);
 
       const photo: Photo = {
         name: photoFiles[i].name,
         uploadedAt: new Date().toISOString(),
-        thumbnailUrl: await createThumbnail(photoFiles[i], 150),  // Small thumbnail for preview
-        url: base64String  // Compressed image as Base64
+        thumbnailUrl: thumbnailUrl,
+        url: url,
+        publicId: publicId
       };
 
       photoData.push(photo);
@@ -318,170 +265,86 @@ const processPhotos = async (): Promise<Photo[]> => {
   return photoData;
 };
 
-
-
-  // Add new activity
-  const addActivity = async () => {
-    if (!newActivity.title || !newActivity.description) {
-      alert('Please fill in the title and description');
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      // Process photos
-      const photoData = await processPhotos();
-
-      // Create a Firestore-friendly version of photo data
-      const firestorePhotoData = photoData.map(photo => ({
-        name: photo.name,
-        uploadedAt: photo.uploadedAt,
-        thumbnailUrl: photo.thumbnailUrl,
-      }));
-
-      // Add the activity document with photo thumbnails
-      const activityRef = await addDoc(collection(db, 'activities'), {
-        title: newActivity.title,
-        description: newActivity.description,
-        date: newActivity.date || new Date().toISOString().split('T')[0],
-        photos: firestorePhotoData, // Only store thumbnails in main document
-        createdAt: serverTimestamp()
-      });
-
-      // Now store the full-size images in separate documents
-      for (let i = 0; i < photoData.length; i++) {
-        await addDoc(collection(db, 'activityPhotos'), {
-          activityId: activityRef.id,
-          photoIndex: i,
-          fullImageData: photoData[i].url,
-          createdAt: serverTimestamp()
-        });
-      }
-
-      // Reset form
-      setNewActivity({
-        title: '',
-        description: '',
-        date: '',
-        photos: []
-      });
-      setPhotoFiles([]);
-      setPhotoPreview([]);
-      setPhotoUploadProgress(0);
-      setShowActivityForm(false);
-
-      // Refresh activities list
-      fetchActivities();
-    } catch (error) {
-      console.error('Error adding activity:', error);
-      alert('Failed to add activity. Please try again: ' + error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Update existing activity
-  const updateActivity = async () => {
-    if (!currentActivityId || !newActivity.title || !newActivity.description) {
-      alert('Please fill in the title and description');
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      // Process new photos
-      const photoData = await processPhotos();
-
-      // Create a Firestore-friendly version of photo data
-      const newPhotoData = photoData.map(photo => ({
-        name: photo.name,
-        uploadedAt: photo.uploadedAt,
-        thumbnailUrl: photo.thumbnailUrl,
-      }));
-
-      // Update the activity document
-      const activityRef = doc(db, 'activities', currentActivityId);
-      await updateDoc(activityRef, {
-        title: newActivity.title,
-        description: newActivity.description,
-        date: newActivity.date || new Date().toISOString().split('T')[0],
-        photos: [...existingPhotos, ...newPhotoData], // Combine existing and new photos
-        updatedAt: serverTimestamp()
-      });
-
-      // Store the full-size images for new photos in separate documents
-      // First, get highest existing photo index
-      const photoQuery = query(
-        collection(db, 'activityPhotos'),
-        where('activityId', '==', currentActivityId)
-      );
-      const photoSnapshot = await getDocs(photoQuery);
-      let startIndex = 0;
-
-      // Find the highest existing index
-      if (!photoSnapshot.empty) {
-        const indices = photoSnapshot.docs.map(doc => doc.data().photoIndex as number);
-        startIndex = Math.max(...indices) + 1;
-      }
-
-      // Add new photos
-      for (let i = 0; i < photoData.length; i++) {
-        await addDoc(collection(db, 'activityPhotos'), {
-          activityId: currentActivityId,
-          photoIndex: startIndex + i,
-          fullImageData: photoData[i].url,
-          createdAt: serverTimestamp()
-        });
-      }
-
-// Delete removed photo documents
-const currentActivity = activities.find(a => a.id === currentActivityId);
-if (currentActivity && existingPhotos.length < currentActivity.photos.length) {
-  // Find photos that were removed
-  const removedIndices: number[] = [];
-
-  currentActivity.photos.forEach((photo, idx) => {
-    // If this photo isn't in existingPhotos array, it was removed
-    const stillExists = existingPhotos.some(p =>
-      p.name === photo.name && p.uploadedAt === photo.uploadedAt
-    );
-
-    if (!stillExists) {
-      removedIndices.push(idx);
-    }
-  });
-
-  // Delete the corresponding documents
-  for (const idx of removedIndices) {
-    const deletedPhotoQuery = query(
-      collection(db, 'activityPhotos'),
-      where('activityId', '==', currentActivityId),
-      where('photoIndex', '==', idx)
-    );
-
-    const deletedPhotoSnapshot = await getDocs(deletedPhotoQuery);
-
-    if (!deletedPhotoSnapshot.empty) {
-      await deleteDoc(deletedPhotoSnapshot.docs[0].ref);
-    }
+  // Add new activity - updated to use new photo handling
+// Updated addActivity function
+const addActivity = async () => {
+  if (!newActivity.title || !newActivity.description) {
+    alert('Please fill in the title and description');
+    return;
   }
-}
 
+  setIsLoading(true);
+  try {
+    // Process photos with Cloudinary, passing the activity title
+    const photoData = await processPhotos(newActivity.title);
 
-      // Reset form
-      resetForm();
+    // Add the activity document with photo data directly
+    await addDoc(collection(db, 'activities'), {
+      title: newActivity.title,
+      description: newActivity.description,
+      date: newActivity.date || new Date().toISOString().split('T')[0],
+      photos: photoData, // Store complete photo data
+      createdAt: serverTimestamp()
+    });
 
-      // Refresh activities list
-      fetchActivities();
-    } catch (error) {
-      console.error('Error updating activity:', error);
-      alert('Failed to update activity. Please try again: ' + error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    // Reset form
+    setNewActivity({
+      title: '',
+      description: '',
+      date: '',
+      photos: []
+    });
+    setPhotoFiles([]);
+    setPhotoPreview([]);
+    setPhotoUploadProgress(0);
+    setShowActivityForm(false);
 
-  // Load activity for editing
+    // Refresh activities list
+    fetchActivities();
+  } catch (error) {
+    console.error('Error adding activity:', error);
+    alert('Failed to add activity. Please try again: ' + error);
+  } finally {
+    setIsLoading(false);
+  }
+};
+
+// Updated updateActivity function
+const updateActivity = async () => {
+  if (!currentActivityId || !newActivity.title || !newActivity.description) {
+    alert('Please fill in the title and description');
+    return;
+  }
+
+  setIsLoading(true);
+  try {
+    // Process new photos with Cloudinary, passing the activity title
+    const photoData = await processPhotos(newActivity.title);
+
+    // Update the activity document
+    const activityRef = doc(db, 'activities', currentActivityId);
+    await updateDoc(activityRef, {
+      title: newActivity.title,
+      description: newActivity.description,
+      date: newActivity.date || new Date().toISOString().split('T')[0],
+      photos: [...existingPhotos, ...photoData], // Combine existing and new photos
+      updatedAt: serverTimestamp()
+    });
+
+    // Reset form
+    resetForm();
+
+    // Refresh activities list
+    fetchActivities();
+  } catch (error) {
+    console.error('Error updating activity:', error);
+    alert('Failed to update activity. Please try again: ' + error);
+  } finally {
+    setIsLoading(false);
+  }
+};
+
+  // Load activity for editing - remains mostly the same
   const loadActivityForEdit = async (activityId: string) => {
     setIsLoading(true);
     try {
@@ -512,61 +375,44 @@ if (currentActivity && existingPhotos.length < currentActivity.photos.length) {
       setIsLoading(false);
     }
   };
+  const filteredNotifications = activities.filter(activities =>
+    activities.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    activities.description.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
-  // Handle search
-  const handleSearch = async () => {
-    if (!searchQuery.trim()) {
-      fetchActivities();
-      return;
-    }
 
-    setIsLoading(true);
-    try {
-      // Case-insensitive search is tricky in Firestore
-      // This is a simplified approach - for production, consider using Firebase Extensions
-      // like Search with Algolia or ElasticSearch
-      const activitiesRef = collection(db, 'activities');
-      const querySnapshot = await getDocs(activitiesRef);
 
-      const searchResults = querySnapshot.docs
-        .map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-          date: doc.data().date || doc.data().createdAt?.toDate().toISOString().split('T')[0]
-        })) as Activity[];
-
-      const filteredResults = searchResults.filter(activity =>
-        activity.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        activity.description.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-
-      setActivities(filteredResults);
-    } catch (error) {
-      console.error('Error searching activities:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Delete activity
+  // Delete activity - updated to handle Cloudinary image deletion
   const deleteActivity = async (activityId: string) => {
     if (!confirm('Are you sure you want to delete this activity?')) return;
 
     setIsLoading(true);
     try {
+      // Get activity to extract photo publicIds
+      const activityDoc = await getDoc(doc(db, 'activities', activityId));
+
+      if (activityDoc.exists()) {
+        const activityData = activityDoc.data();
+        const photos = activityData.photos || [];
+
+        // Optional: Delete images from Cloudinary if you have a server endpoint
+        // This requires a server component as Cloudinary API keys shouldn't be exposed in frontend
+        // For each photo that has a publicId, you could call your server endpoint to delete
+
+        // Example of what the server endpoint might look like:
+        // photos.forEach(async (photo) => {
+        //   if (photo.publicId) {
+        //     await fetch('/api/delete-cloudinary-image', {
+        //       method: 'POST',
+        //       headers: { 'Content-Type': 'application/json' },
+        //       body: JSON.stringify({ publicId: photo.publicId })
+        //     });
+        //   }
+        // });
+      }
+
       // Delete activity document
       await deleteDoc(doc(db, 'activities', activityId));
-
-      // Delete associated photo documents
-      const photoQuery = query(
-        collection(db, 'activityPhotos'),
-        where('activityId', '==', activityId)
-      );
-
-      const photoSnapshot = await getDocs(photoQuery);
-
-      const deletionPromises = photoSnapshot.docs.map(doc => deleteDoc(doc.ref));
-      await Promise.all(deletionPromises);
 
       // Refresh the activities list
       fetchActivities();
@@ -578,7 +424,7 @@ if (currentActivity && existingPhotos.length < currentActivity.photos.length) {
     }
   };
 
-  // Reset form function
+  // Reset form function - remains the same
   const resetForm = () => {
     setNewActivity({
       title: '',
@@ -595,6 +441,7 @@ if (currentActivity && existingPhotos.length < currentActivity.photos.length) {
     setCurrentActivityId(null);
   };
 
+  // UI rendering - updated to use direct URLs
   return (
     <>
       <Card className="w-full">
@@ -603,20 +450,29 @@ if (currentActivity && existingPhotos.length < currentActivity.photos.length) {
             <span className="mb-2 sm:mb-0">Activities</span>
             <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
               <div className="relative w-full sm:w-auto">
-                <input
-                  type="text"
-                  placeholder="Search activities..."
-                  className="w-full px-3 py-2 pr-8 text-sm border rounded-md"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                />
-                <button
-                  onClick={handleSearch}
-                  className="absolute right-2 top-1/2 transform -translate-y-1/2"
-                >
-                  <Search className="h-4 w-4 text-gray-500" />
-                </button>
+              <div className="relative">
+  <input
+    type="text"
+    placeholder="Search by title or content..."
+    value={searchTerm}
+    onChange={(e) => setSearchTerm(e.target.value)}
+    className="p-2 pl-8 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-64"
+  />
+  <svg
+    className="absolute left-2 top-2.5 h-4 w-4 text-gray-500"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+    />
+  </svg>
+</div>
               </div>
               <button
                 onClick={() => setShowActivityForm(true)}
@@ -688,9 +544,7 @@ if (currentActivity && existingPhotos.length < currentActivity.photos.length) {
                 )}
 
                 {/* Upload new photos area */}
-{/* For selecting from files */}
-  {/* Upload new photos area */}
-  <input
+                <input
                   type="file"
                   accept="image/*"
                   multiple
@@ -700,32 +554,12 @@ if (currentActivity && existingPhotos.length < currentActivity.photos.length) {
                   key={`files-${Date.now()}`}
                 />
 
-{/* For taking photos with camera */}
-{/* <input
-  type="file"
-  accept="image/*"
-  multiple
-  onChange={handlePhotoSelect}
-  className="hidden"
-  id="photo-upload-camera"
-  capture="environment"
-  key={`camera-${Date.now()}`}
-/> */}
-
-{/* Two different labels */}
-<label htmlFor="photo-upload-files" className="cursor-pointer mr-2">
-  <div className="flex flex-col items-center">
-    <Image className="h-8 w-8 text-gray-400 mb-2" />
-    <p className="text-sm text-gray-500">Choose from gallery</p>
-  </div>
-</label>
-
-{/* <label htmlFor="photo-upload-camera" className="cursor-pointer">
-  <div className="flex flex-col items-center">
-    <Upload className="h-8 w-8 text-gray-400 mb-2" />
-    <p className="text-sm text-gray-500">Take a photo</p>
-  </div>
-</label> */}
+                <label htmlFor="photo-upload-files" className="cursor-pointer mr-2">
+                  <div className="flex flex-col items-center">
+                    <Image className="h-8 w-8 text-gray-400 mb-2" />
+                    <p className="text-sm text-gray-500">Choose from gallery</p>
+                  </div>
+                </label>
 
                 {photoPreview.length > 0 && (
                   <div className="mt-4">
@@ -802,7 +636,7 @@ if (currentActivity && existingPhotos.length < currentActivity.photos.length) {
                   </button>
                 </div>
                 ) : (
-                activities.map((activity) => (
+                  filteredNotifications.map((activity) => (
                   <div key={activity.id} className="p-4 bg-gray-50 rounded-lg border">
                     <div className="flex flex-col sm:flex-row sm:justify-between">
                       <p className="font-medium text-lg mb-1 sm:mb-0">{activity.title}</p>
@@ -837,7 +671,7 @@ if (currentActivity && existingPhotos.length < currentActivity.photos.length) {
                                 src={photo.thumbnailUrl}
                                 alt={`Activity photo ${index + 1}`}
                                 className="h-24 w-24 object-cover rounded-md cursor-pointer"
-                                onClick={() => handleViewFullImage(activity.id, index)}
+                                onClick={() => handleViewFullImage(photo.url)}
                               />
                             </div>
                           ))}
@@ -847,7 +681,6 @@ if (currentActivity && existingPhotos.length < currentActivity.photos.length) {
                   </div>
                 ))
               )}
-
 
               {/* View more button - show only if there are more than 5 activities */}
               {activities.length > 5 && (

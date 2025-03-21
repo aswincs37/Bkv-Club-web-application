@@ -103,12 +103,13 @@ const About = () => {
         }}
       />
 
-      <Container maxWidth="lg" sx={{ position: "relative", zIndex: 1, py: { xs: 6, md: 10 } }}>
+      <Container maxWidth="lg" sx={{ position: "relative", zIndex: 1, py: { xs: 6, md: 10 },mt:-5, }}>
         {/* Section Title with enhanced typography */}
         <Fade in={true} timeout={1000}>
           <Typography
             variant="h3"
             sx={{
+              fontSize:{xs:35},
               fontWeight: 800,
               color: "white",
               mb: 6,

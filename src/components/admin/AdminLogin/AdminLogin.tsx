@@ -141,7 +141,7 @@ const AdminLoginPage: React.FC = () => {
 
   return (
     <>
-     <div className="bg-blue-700 py-3 px-6 shadow-md">
+    <div className="bg-blue-700 py-3 px-6 shadow-md">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <img

@@ -1,13 +1,15 @@
 "use client"
-import { useState, useEffect, SetStateAction } from "react";
+import { useState, useEffect, SetStateAction, useRef } from "react";
 import {
   Box, Typography, Grid, Card, CardContent, Modal,
   IconButton, keyframes, useMediaQuery, useTheme,
-   Container, Fade, Zoom, Chip, Avatar
+  Container, Fade, Zoom, Chip, Avatar, Slider as MUISlider
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
+import ZoomInIcon from "@mui/icons-material/ZoomIn";
+import ZoomOutIcon from "@mui/icons-material/ZoomOut";
+import RestartAltIcon from "@mui/icons-material/RestartAlt";
 
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
@@ -27,61 +29,12 @@ const shineAnimation = keyframes`
   0% { left: -100%; }
   50%, 100% { left: 100%; }
 `;
+
 interface Photo {
   url?: string;
   thumbnailUrl?: string;
 }
-// Activity data with multiple images
-// const activities = [
-//   {
-//     images: ["/about-images/bkv-1.jpg", "/about-images/bkv-2.jpg", "/about-images/bkv-3.jpg"],
-//     title: "Cultural Festival",
-//     subtitle: "Celebrating Arts & Traditions",
-//     year: "2023",
-//     participants: "500+",
-//     description: "A grand festival celebrating art, music, and dance. Featuring talented artists from all around. This event brings together various performers from different regions, giving them a platform to showcase their skills. With live music, drama, and dance performances, the festival aims to promote cultural diversity and unity among communities. The event also includes food stalls, traditional arts and crafts exhibitions, and interactive sessions with renowned artists."
-//   },
-//   {
-//     images: ["/about-images/bkv-4.jpg", "/about-images/bkv-5.jpg", "/about-images/bkv-6.jpg"],
-//     title: "Annual Sports Meet",
-//     subtitle: "Promoting Athletic Excellence",
-//     year: "2023",
-//     participants: "300+",
-//     description: "Encouraging youth participation in various sports and games to promote a healthy lifestyle. The event includes running races, football tournaments, badminton, and relay races. We also conduct motivational sessions by professional athletes who share their journey to success. Every year, we witness an increase in participation, which is a testament to the growing enthusiasm for sports in our community."
-//   },
-//   {
-//     images: ["/about-images/bkv-7.jpg", "/about-images/bkv-8.jpg", "/about-images/bkv-9.jpg"],
-//     title: "Community Service",
-//     subtitle: "Giving Back to Society",
-//     year: "2023",
-//     participants: "200+",
-//     description: "Organizing charity events, blood donation camps, and volunteering activities for social good. Our community service programs aim to uplift the underprivileged and create awareness about important social issues. Activities include free health check-up camps, educational support for children, and environmental conservation initiatives such as tree plantation drives."
-//   },
-//   {
-//     images: ["/about-images/bkv-1.jpg", "/about-images/bkv-2.jpg", "/about-images/bkv-3.jpg"],
-//     title: "Art Exhibition",
-//     subtitle: "Showcasing Local Talent",
-//     year: "2022",
-//     participants: "150+",
-//     description: "A grand festival celebrating art, music, and dance. Featuring talented artists from all around. This event brings together various performers from different regions, giving them a platform to showcase their skills. With live music, drama, and dance performances, the festival aims to promote cultural diversity and unity among communities. The event also includes food stalls, traditional arts and crafts exhibitions, and interactive sessions with renowned artists."
-//   },
-//   {
-//     images: ["/about-images/bkv-4.jpg", "/about-images/bkv-5.jpg", "/about-images/bkv-6.jpg"],
-//     title: "Youth Conference",
-//     subtitle: "Shaping Tomorrow's Leaders",
-//     year: "2022",
-//     participants: "250+",
-//     description: "Encouraging youth participation in various sports and games to promote a healthy lifestyle. The event includes running races, football tournaments, badminton, and relay races. We also conduct motivational sessions by professional athletes who share their journey to success. Every year, we witness an increase in participation, which is a testament to the growing enthusiasm for sports in our community."
-//   },
-//   {
-//     images: ["/about-images/bkv-7.jpg", "/about-images/bkv-8.jpg", "/about-images/bkv-9.jpg"],
-//     title: "Charity Fundraiser",
-//     subtitle: "Supporting Local Causes",
-//     year: "2022",
-//     participants: "400+",
-//     description: "Organizing charity events, blood donation camps, and volunteering activities for social good. Our community service programs aim to uplift the underprivileged and create awareness about important social issues. Activities include free health check-up camps, educational support for children, and environmental conservation initiatives such as tree plantation drives."
-//   }
-// ];
+
 // Interface for activity data
 interface Activity {
   id: string;
@@ -97,119 +50,233 @@ interface Activity {
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
-const OurActivities = () => {
 
+const OurActivities = () => {
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
   const [activities, setActivities] = useState<Activity[]>([]);
   const setLoading = useState<boolean>(true)[1];
   const setError = useState<string | null>(null)[1];
   const [activeIndex, setActiveIndex] = useState(0);
+  const [currentSlide, setCurrentSlide] = useState(0);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
-  //const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));
 
-  //const [selectedActivity, setSelectedActivity] = useState<null | typeof activities[number]>(null);
+  // Image zoom state
+  const [zoomLevel, setZoomLevel] = useState(1);
+  const [imagePosition, setImagePosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const imageRef = useRef<HTMLDivElement>(null);
 
+  // Fetch activities from Firestore
+  useEffect(() => {
+    const fetchActivities = async () => {
+      try {
+        setLoading(true);
+        const activitiesQuery = query(
+          collection(db, "activities"),
+          orderBy("createdAt", "desc")
+        );
 
- // Fetch activities from Firestore
- useEffect(() => {
-  const fetchActivities = async () => {
-    try {
-      setLoading(true);
-      const activitiesQuery = query(
-        collection(db, "activities"),
-        orderBy("createdAt", "desc")
-      );
+        const querySnapshot = await getDocs(activitiesQuery);
+        const activitiesData: Activity[] = [];
 
-      const querySnapshot = await getDocs(activitiesQuery);
-      const activitiesData: Activity[] = [];
-
-      querySnapshot.forEach((doc) => {
-        const data = doc.data();
-        activitiesData.push({
-          id: doc.id,
-          title: data.title || "No Title",
-          description: data.description || "No Description",
-          date: data.date || "",
-          photos: (data.photos || []).map((photo: Photo) => ({
-            ...photo,
-            url: photo.url || photo.thumbnailUrl // Make sure we have a full-size URL
-          })),
-          createdAt: data.createdAt,
-          updatedAt: data.updatedAt
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          activitiesData.push({
+            id: doc.id,
+            title: data.title || "No Title",
+            description: data.description || "No Description",
+            date: data.date || "",
+            photos: (data.photos || []).map((photo: Photo) => ({
+              ...photo,
+              url: photo.url  // Make sure we have a full-size URL
+            })),
+            createdAt: data.createdAt,
+            updatedAt: data.updatedAt
+          });
         });
-      });
-      setActivities(activitiesData);
-      // Initialize visibility array with correct length
-      // setVisible(new Array(activitiesData.length).fill(false));
+        setActivities(activitiesData);
 
-      // // Give time for the DOM to update before checking visibility
-      // setTimeout(() => {
-      //   setSliderReady(true);
-      // }, 500);
+      } catch (err) {
+        console.error("Error fetching activities: ", err);
+        setError("Failed to load activities. Please try again later.");
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    } catch (err) {
-      console.error("Error fetching activities: ", err);
+    fetchActivities().catch(err => {
+      console.error("Unhandled promise rejection in fetchActivities:", err);
       setError("Failed to load activities. Please try again later.");
-    } finally {
       setLoading(false);
-    }
-  };
-
-  fetchActivities().catch(err => {
-    console.error("Unhandled promise rejection in fetchActivities:", err);
-    setError("Failed to load activities. Please try again later.");
-    setLoading(false);
-  });
-}, []);
+    });
+  }, []);
 
   const handleOpenModal = (activity: typeof activities[number]) => {
     setSelectedActivity(activity);
+    // Reset zoom and position when opening modal
+    setZoomLevel(1);
+    setImagePosition({ x: 0, y: 0 });
+    setCurrentSlide(0);
   };
-
 
   const handleCloseModal = () => {
     setSelectedActivity(null);
   };
 
-  // Enhanced slider settings for cards with responsive options
-  const cardSliderSettings = {
-    dots: true,
-    infinite: true,
-    speed: 1000,
-    slidesToShow: 1,
-    slidesToScroll: 1,
-    autoplay: true,
-    autoplaySpeed: 3000,
-    arrows: false,
-    afterChange: (current: SetStateAction<number>) => setActiveIndex(current),
-    customPaging: (i: number) => (
-      <div
-        style={{
-          width: '8px',
-          height: '8px',
-          borderRadius: '50%',
-          background: i === activeIndex ? '#fff' : 'rgba(255,255,255,0.5)',
-          transition: 'all 0.3s ease',
-          margin: '0 2px',
-        }}
-      />
-    ),
-    dotsClass: "slick-dots custom-dots"
+  // Image zoom and pan handlers
+  const handleZoomIn = () => {
+    if (zoomLevel < 3) {
+      setZoomLevel(prev => prev + 0.5);
+    }
   };
 
-  // Enhanced slider settings for modal
-  const modalSliderSettings = {
-    dots: true,
-    infinite: true,
-    speed: 500,
-    slidesToShow: 1,
-    slidesToScroll: 1,
-    autoplay: true,
-    autoplaySpeed: 4000,
-    arrows: true,
-    pauseOnHover: true,
-    fade: true
+  const handleZoomOut = () => {
+    if (zoomLevel > 1) {
+      setZoomLevel(prev => Math.max(1, prev - 0.5));
+    } else {
+      // Reset position when fully zoomed out
+      setImagePosition({ x: 0, y: 0 });
+    }
+  };
+
+  const handleZoomReset = () => {
+    setZoomLevel(1);
+    setImagePosition({ x: 0, y: 0 });
+  };
+
+  const handleZoomChange = (_event: Event, newValue: number | number[]) => {
+    setZoomLevel(newValue as number);
+  };
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (zoomLevel > 1) {
+      setIsDragging(true);
+      setDragStart({ x: e.clientX - imagePosition.x, y: e.clientY - imagePosition.y });
+    }
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (isDragging && zoomLevel > 1) {
+      const newX = e.clientX - dragStart.x;
+      const newY = e.clientY - dragStart.y;
+
+      // Calculate bounds to prevent dragging image out of view
+      const containerWidth = imageRef.current?.clientWidth || 0;
+      const containerHeight = imageRef.current?.clientHeight || 0;
+      const maxX = (containerWidth * (zoomLevel - 1)) / 2;
+      const maxY = (containerHeight * (zoomLevel - 1)) / 2;
+
+      // Bound the drag within limits
+      const boundedX = Math.max(-maxX, Math.min(maxX, newX));
+      const boundedY = Math.max(-maxY, Math.min(maxY, newY));
+
+      setImagePosition({ x: boundedX, y: boundedY });
+    }
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  // Handle touch events for mobile
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (zoomLevel > 1) {
+      setIsDragging(true);
+      setDragStart({
+        x: e.touches[0].clientX - imagePosition.x,
+        y: e.touches[0].clientY - imagePosition.y
+      });
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (isDragging && zoomLevel > 1) {
+      const newX = e.touches[0].clientX - dragStart.x;
+      const newY = e.touches[0].clientY - dragStart.y;
+
+      // Calculate bounds to prevent dragging image out of view
+      const containerWidth = imageRef.current?.clientWidth || 0;
+      const containerHeight = imageRef.current?.clientHeight || 0;
+      const maxX = (containerWidth * (zoomLevel - 1)) / 2;
+      const maxY = (containerHeight * (zoomLevel - 1)) / 2;
+
+      // Bound the drag within limits
+      const boundedX = Math.max(-maxX, Math.min(maxX, newX));
+      const boundedY = Math.max(-maxY, Math.min(maxY, newY));
+
+      setImagePosition({ x: boundedX, y: boundedY });
+
+      // Prevent page scrolling when dragging image
+      e.preventDefault();
+    }
+  };
+
+  const handleTouchEnd = () => {
+    setIsDragging(false);
+  };
+
+  // Reset zoom and position when changing slides
+  const handleAfterChange = (index: number) => {
+    setCurrentSlide(index);
+    setZoomLevel(1);
+    setImagePosition({ x: 0, y: 0 });
+  };
+
+  // Get dynamic slider settings for cards based on photo count
+  const getCardSliderSettings = (photoCount: number) => {
+    // Base settings for all scenarios
+    const baseSettings = {
+      dots: true,
+      infinite: photoCount > 1, // Only make it infinite if we have multiple photos
+      speed: 1000,
+      slidesToShow: 1,
+      slidesToScroll: 1,
+      autoplay: photoCount > 1, // Only autoplay if there are multiple images
+      autoplaySpeed: 3000,
+      arrows: false,
+      afterChange: (current: SetStateAction<number>) => setActiveIndex(current),
+      customPaging: (i: number) => (
+        <div
+          style={{
+            width: '8px',
+            height: '8px',
+            borderRadius: '50%',
+            background: i === activeIndex ? '#fff' : 'rgba(255,255,255,0.5)',
+            transition: 'all 0.3s ease',
+            margin: '0 2px',
+          }}
+        />
+      ),
+      dotsClass: "slick-dots custom-dots"
+    };
+
+    // If there's only one photo, hide the dots
+    if (photoCount <= 1) {
+      return {
+        ...baseSettings,
+        dots: false
+      };
+    }
+
+    return baseSettings;
+  };
+
+  // Get dynamic slider settings for modal based on photo count
+  const getModalSliderSettings = (photoCount: number) => {
+    return {
+      dots: photoCount > 1,
+      infinite: photoCount > 1,
+      speed: 500,
+      slidesToShow: 1,
+      slidesToScroll: 1,
+      autoplay: false, // Disable autoplay for better user control with zoom
+      arrows: photoCount > 1,
+      pauseOnHover: true,
+      fade: true,
+      afterChange: handleAfterChange
+    };
   };
 
   // Animate cards on scroll effect
@@ -298,7 +365,7 @@ const OurActivities = () => {
         }}
       />
 
-      <Container maxWidth="lg" sx={{ position: "relative", zIndex: 1, py: { xs: 6, md: 8 } }}>
+      <Container maxWidth="lg" sx={{ position: "relative", zIndex: 1, py: { xs: 6, md: 8 }, mt: -4 }}>
         {/* Section Title with enhanced typography */}
         <Fade in={true} timeout={1000}>
           <Box sx={{ textAlign: "center", mb: { xs: 5, md: 7 } }}>
@@ -382,295 +449,370 @@ const OurActivities = () => {
                     }}
                   />
 
-                  {/* Enhanced mini-carousel inside each card */}
+                  {/* Single photo or carousel based on photo count */}
                   <Box sx={{ position: "relative" }}>
-                    <Slider {...cardSliderSettings}>
-                      {activity.photos.map((img, idx) => (
-                        <Box key={idx} sx={{ position: "relative", height: { xs: 180, sm: 200, md: 220 } }}>
-                          <img
-                               src={img.url || img.thumbnailUrl}
-                            alt={activity.title}
-                            style={{
-                              width: "100%",
-                              height: "100%",
-                              objectFit: "cover"
-                            }}
-                          />
-                          <Box
-                            className="card-overlay"
-                            sx={{
-                              position: "absolute",
-                              top: 0,
-                              left: 0,
-                              width: "100%",
-                              height: "100%",
-                              background: "linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.7) 100%)",
-                              opacity: 0.6,
-                              transition: "opacity 0.3s ease",
-                            }}
-                          />
-                        </Box>
-                      ))}
-                    </Slider>
+                    {activity.photos.length === 1 ? (
+                      // Single photo display
+                      <Box sx={{ position: "relative", height: { xs: 180, sm: 200, md: 220 } }}>
+                        <img
+                          src={activity.photos[0].url || activity.photos[0].url}
+                          alt={activity.title}
+                          style={{
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover"
+                          }}
+                        />
+                        <Box
+                          className="card-overlay"
+                          sx={{
+                            position: "absolute",
+                            top: 0,
+                            left: 0,
+                            width: "100%",
+                            height: "100%",
+                            background: "linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.7) 100%)",
+                            opacity: 0.6,
+                            transition: "opacity 0.3s ease",
+                          }}
+                        />
+                      </Box>
+                    ) : (
+                      // Multiple photos carousel
+                      <Slider {...getCardSliderSettings(activity.photos.length)}>
+                        {activity.photos.map((img, idx) => (
+                          <Box key={idx} sx={{ position: "relative", height: { xs: 180, sm: 200, md: 220 } }}>
+                            <img
+                              src={img.url || img.url}
+                              alt={activity.title}
+                              style={{
+                                width: "100%",
+                                height: "100%",
+                                objectFit: "cover"
+                              }}
+                            />
+                            <Box
+                              className="card-overlay"
+                              sx={{
+                                position: "absolute",
+                                top: 0,
+                                left: 0,
+                                width: "100%",
+                                height: "100%",
+                                background: "linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.7) 100%)",
+                                opacity: 0.6,
+                                transition: "opacity 0.3s ease",
+                              }}
+                            />
+                          </Box>
+                        ))}
+                      </Slider>
+                    )}
 
                     {/* Year chip positioned on image */}
                     <Chip
-                     avatar={<Avatar sx={{ bgcolor: "transparent" }}><CalendarTodayIcon fontSize="small" /></Avatar>}
-                     label={activity.date}
-                     sx={{
-                       position: "absolute",
-                       top: 10,
-                       right: 10,
-                       backgroundColor: "rgba(255,255,255,0.85)",
-                       backdropFilter: "blur(5px)",
-                       fontWeight: 500,
-                       zIndex: 1,
-                       border: "1px solid rgba(255,255,255,0.3)",
-                       boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                     }}
-                   />
+                      avatar={<Avatar sx={{ bgcolor: "transparent" }}><CalendarTodayIcon fontSize="small" /></Avatar>}
+                      label={activity.date}
+                      sx={{
+                        position: "absolute",
+                        top: 10,
+                        right: 10,
+                        backgroundColor: "rgba(255,255,255,0.85)",
+                        backdropFilter: "blur(5px)",
+                        fontWeight: 500,
+                        zIndex: 1,
+                        border: "1px solid rgba(255,255,255,0.3)",
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                      }}
+                    />
+                  </Box>
 
-                   {/* Participants chip positioned on image */}
-                   {/* <Chip
-                     avatar={<Avatar sx={{ bgcolor: "transparent" }}><PeopleAltIcon fontSize="small" /></Avatar>}
-                     label={activity.participants}
-                     sx={{
-                       position: "absolute",
-                       bottom: 10,
-                       right: 10,
-                       backgroundColor: "rgba(255,255,255,0.85)",
-                       backdropFilter: "blur(5px)",
-                       fontWeight: 500,
-                       zIndex: 1,
-                       border: "1px solid rgba(255,255,255,0.3)",
-                       boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                     }}
-                   /> */}
-                 </Box>
+                  <CardContent className="card-content" sx={{
+                    transition: "transform 0.3s ease",
+                    background: "linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.85) 100%)",
+                    backdropFilter: "blur(10px)",
+                  }}>
+                    <Typography variant="h6" sx={{
+                      fontWeight: "bold",
+                      mb: 0.5,
+                      background: "linear-gradient(45deg, #7f0000, #ff1a1a)",
+                      WebkitBackgroundClip: "text",
+                      WebkitTextFillColor: "transparent",
+                    }}>
+                      {activity.title}
+                    </Typography>
 
-                 <CardContent className="card-content" sx={{
-                   transition: "transform 0.3s ease",
-                   background: "linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.85) 100%)",
-                   backdropFilter: "blur(10px)",
-                 }}>
-                   <Typography variant="h6" sx={{
-                     fontWeight: "bold",
-                     mb: 0.5,
-                     background: "linear-gradient(45deg, #7f0000, #ff1a1a)",
-                     WebkitBackgroundClip: "text",
-                     WebkitTextFillColor: "transparent",
-                   }}>
-                     {activity.title}
-                   </Typography>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        display: "-webkit-box",
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: "vertical",
+                        lineHeight: 1.6,
+                      }}
+                    >
+                      {activity.description}
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Zoom>
+            </Grid>
+          ))}
+        </Grid>
+      </Container>
 
-                   {/* <Typography variant="body2" sx={{
-                     color: "text.secondary",
-                     mb: 1.5,
-                     fontStyle: "italic"
-                   }}>
-                     {activity.description}
-                   </Typography> */}
+      {/* Enhanced Modal for Full Details with Zoom Functionality */}
+      <Modal
+        open={!!selectedActivity}
+        onClose={handleCloseModal}
+        closeAfterTransition
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          backdropFilter: "blur(8px)",
+        }}
+      >
+        <Fade in={!!selectedActivity}>
+          <Box
+            sx={{
+              position: "relative",
+              bgcolor: "white",
+              borderRadius: 4,
+              maxWidth: { xs: "95vw", sm: "90vw", md: "90vw" },
+              maxHeight: "90vh",
+              display: "flex",
+              flexDirection: { xs: "column", md: "row" },
+              overflow: "hidden",
+              boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)",
+              border: "1px solid rgba(255,255,255,0.2)",
+            }}
+          >
+            {/* Close button */}
+            <IconButton
+              onClick={handleCloseModal}
+              sx={{
+                position: "absolute",
+                top: 15,
+                right: 15,
+                bgcolor: "rgba(255,255,255,0.7)",
+                zIndex: 10,
+                "&:hover": {
+                  bgcolor: "rgba(255,255,255,0.9)",
+                }
+              }}
+            >
+              <CloseIcon />
+            </IconButton>
 
-                   <Typography
-                     variant="body2"
-                     color="text.secondary"
-                     sx={{
-                       overflow: "hidden",
-                       textOverflow: "ellipsis",
-                       display: "-webkit-box",
-                       WebkitLineClamp: 2,
-                       WebkitBoxOrient: "vertical",
-                       lineHeight: 1.6,
-                     }}
-                   >
-                     {activity.description}
-                   </Typography>
-                 </CardContent>
-               </Card>
-             </Zoom>
-           </Grid>
-         ))}
-       </Grid>
+            {selectedActivity && (
+              <>
+                {/* Left side: Full-screen Image Display with Zoom Controls */}
+                <Box sx={{
+                  width: { xs: "100%", md: "60%" },
+                  position: "relative",
+                  overflow: "hidden",
+                  bgcolor: "#f0f0f0",
+                }}>
+                  {/* Zoom controls */}
+                  <Box
+                    sx={{
+                      position: "absolute",
+                      top: 15,
+                      left: 15,
+                      zIndex: 5,
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 1,
+                      bgcolor: "rgba(255,255,255,0.7)",
+                      borderRadius: 2,
+                      p: 0.5,
+                    }}
+                  >
+                    <IconButton size="small" onClick={handleZoomIn}>
+                      <ZoomInIcon />
+                    </IconButton>
+                    <IconButton size="small" onClick={handleZoomOut}>
+                      <ZoomOutIcon />
+                    </IconButton>
+                    <IconButton size="small" onClick={handleZoomReset}>
+                      <RestartAltIcon />
+                    </IconButton>
+                  </Box>
 
-       {/* Enhanced View More Button */}
-       {/* <Fade in={true} timeout={2000}>
-         <Box sx={{ display: "flex", justifyContent: "center", mt: 5 }}>
-           <Button
-             variant="contained"
-             endIcon={<ArrowForwardIcon />}
-             sx={{
-               px: 4,
-               py: 1.5,
-               fontSize: "16px",
-               fontWeight: "bold",
-               borderRadius: "30px",
-               background: "rgba(255,255,255,0.2)",
-               backdropFilter: "blur(10px)",
-               color: "white",
-               border: "1px solid rgba(255,255,255,0.3)",
-               textTransform: "none",
-               transition: "all 0.3s ease",
-               boxShadow: "0 10px 20px rgba(0,0,0,0.1)",
-               "&:hover": {
-                 background: "rgba(255,255,255,0.3)",
-                 transform: "translateY(-5px)",
-                 boxShadow: "0 15px 30px rgba(0,0,0,0.2)",
-               }
-             }}
-             onClick={() => router.push("/our-activities")}
-           >
-             Explore All Activities
-           </Button>
-         </Box>
-       </Fade> */}
-     </Container>
+                  {/* Zoom slider */}
+                  <Box
+                    sx={{
+                      position: "absolute",
+                      bottom: 15,
+                      left: "50%",
+                      transform: "translateX(-50%)",
+                      width: "60%",
+                      zIndex: 5,
+                      bgcolor: "rgba(255,255,255,0.7)",
+                      borderRadius: 2,
+                      p: 1,
+                      display: "flex",
+                      alignItems: "center",
+                    }}
+                  >
+                    <ZoomOutIcon sx={{ fontSize: 18, mr: 1 }} />
+                    <MUISlider
+                      value={zoomLevel}
+                      min={1}
+                      max={3}
+                      step={0.1}
+                      onChange={handleZoomChange}
+                      aria-labelledby="zoom-slider"
+                      sx={{ mx: 1 }}
+                    />
+                    <ZoomInIcon sx={{ fontSize: 18, ml: 1 }} />
+                  </Box>
 
-     {/* Enhanced Modal for Full Details */}
-     <Modal
-       open={!!selectedActivity}
-       onClose={handleCloseModal}
-       closeAfterTransition
-       sx={{
-         display: "flex",
-         alignItems: "center",
-         justifyContent: "center",
-         backdropFilter: "blur(8px)",
-       }}
-     >
-       <Fade in={!!selectedActivity}>
-         <Box
-           sx={{
-             position: "relative",
-             bgcolor: "white",
-             borderRadius: 4,
-             maxWidth: { xs: "95vw", sm: "90vw", md: "80vw" },
-             maxHeight: "90vh",
-             display: "flex",
-             flexDirection: { xs: "column", md: "row" },
-             overflow: "hidden",
-             boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)",
-             border: "1px solid rgba(255,255,255,0.2)",
-           }}
-         >
-           {/* Close button */}
-           <IconButton
-             onClick={handleCloseModal}
-             sx={{
-               position: "absolute",
-               top: 15,
-               right: 15,
-               bgcolor: "rgba(255,255,255,0.7)",
-               zIndex: 10,
-               "&:hover": {
-                 bgcolor: "rgba(255,255,255,0.9)",
-               }
-             }}
-           >
-             <CloseIcon />
-           </IconButton>
+                  {selectedActivity.photos.length === 1 ? (
+                    // Single image display with zoom & pan
+                    <Box
+                      ref={imageRef}
+                      sx={{
+                        position: "relative",
+                        height: { xs: 300, md: 600 },
+                        overflow: "hidden",
+                        cursor: zoomLevel > 1 ? "grab" : "default",
+                        "&:active": {
+                          cursor: zoomLevel > 1 ? "grabbing" : "default",
+                        }
+                      }}
+                      onMouseDown={handleMouseDown}
+                      onMouseMove={handleMouseMove}
+                      onMouseUp={handleMouseUp}
+                      onMouseLeave={handleMouseUp}
+                      onTouchStart={handleTouchStart}
+                      onTouchMove={handleTouchMove}
+                      onTouchEnd={handleTouchEnd}
+                    >
+                      <Box
+                        sx={{
+                          position: "absolute",
+                          top: "50%",
+                          left: "50%",
+                          width: "100%",
+                          height: "100%",
+                          transform: `translate(-50%, -50%) translate(${imagePosition.x}px, ${imagePosition.y}px) scale(${zoomLevel})`,
+                          transition: isDragging ? "none" : "transform 0.2s ease-out",
+                        }}
+                      >
+                        <img
+                          src={selectedActivity.photos[0].url}
+                          alt={selectedActivity.title}
+                          style={{
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "contain"
+                          }}
+                        />
+                      </Box>
+                    </Box>
+                  ) : (
+                    // Multiple images slider with zoom & pan
+                    <Box>
+                      <Slider {...getModalSliderSettings(selectedActivity.photos.length)}>
+                        {selectedActivity.photos.map((img, index) => (
+                          <Box
+                            key={index}
+                            ref={index === currentSlide ? imageRef : null}
+                            sx={{
+                              position: "relative",
+                              height: { xs: 300, md: 600 },
+                              overflow: "hidden",
+                              cursor: zoomLevel > 1 ? "grab" : "default",
+                              "&:active": {
+                                cursor: zoomLevel > 1 ? "grabbing" : "default",
+                              }
+                            }}
+                            onMouseDown={index === currentSlide ? handleMouseDown : undefined}
+                            onMouseMove={index === currentSlide ? handleMouseMove : undefined}
+                            onMouseUp={index === currentSlide ? handleMouseUp : undefined}
+                            onMouseLeave={index === currentSlide ? handleMouseUp : undefined}
+                            onTouchStart={index === currentSlide ? handleTouchStart : undefined}
+                            onTouchMove={index === currentSlide ? handleTouchMove : undefined}
+                            onTouchEnd={index === currentSlide ? handleTouchEnd : undefined}
+                          >
+                            <Box
+                              sx={{
+                                position: "absolute",
+                                top: "50%",
+                                left: "50%",
+                                width: "100%",
+                                height: "100%",
+                                transform: index === currentSlide
+                                  ? `translate(-50%, -50%) translate(${imagePosition.x}px, ${imagePosition.y}px) scale(${zoomLevel})`
+                                  : "translate(-50%, -50%) scale(1)",
+                                transition: isDragging ? "none" : "transform 0.2s ease-out",
+                              }}
+                            >
+                              <img
+                                src={img.url}
+                                alt={selectedActivity.title}
+                                style={{
+                                  width: "100%",
+                                  height: "100%",
+                                  objectFit: "contain"
+                                }}
+                              />
+                            </Box>
+                          </Box>
+                        ))}
+                      </Slider>
+                    </Box>
+                  )}
+                </Box>
 
-           {selectedActivity && (
-             <>
-               {/* Left side: Full-screen Image Slider */}
-               <Box sx={{
-                 width: { xs: "100%", md: "55%" },
-                 position: "relative",
-                 overflow: "hidden",
-               }}>
-                 <Slider {...modalSliderSettings}>
-                   {selectedActivity.photos.map((img, index) => (
-                     <Box key={index} sx={{ position: "relative" }}>
-                       <img
-                            src={img.url || img.thumbnailUrl}
-                         alt={selectedActivity.title}
-                         style={{
-                           width: "100%",
-                           height: isMobile ? "250px" : "500px",
-                           objectFit: "cover",
-                         }}
-                       />
-                     </Box>
-                   ))}
-                 </Slider>
-               </Box>
+                {/* Right side: Content */}
+                <Box
+                  sx={{
+                    width: { xs: "100%", md: "40%" },
+                    p: { xs: 3, md: 4 },
+                    display: "flex",
+                    flexDirection: "column",
+                    overflow: "auto",
+                  }}
+                >
+                  <Typography variant="h4" sx={{ fontWeight: "bold", mb: 1, color: "#1a1a1a" }}>
+                    {selectedActivity.title}
+                  </Typography>
 
-               {/* Right side: Content */}
-               <Box
-                 sx={{
-                   width: { xs: "100%", md: "45%" },
-                   p: { xs: 3, md: 4 },
-                   display: "flex",
-                   flexDirection: "column",
-                   overflow: "auto",
-                 }}
-               >
-                 {/* <Typography variant="overline" sx={{ color: "#7f0000", fontWeight: 600, letterSpacing: 1 }}>
-                   {selectedActivity.date}
-                 </Typography> */}
+                  <Box sx={{ display: "flex", gap: 2, mb: 3, flexWrap: "wrap" }}>
+                    <Chip
+                      icon={<CalendarTodayIcon />}
+                      label={`Year: ${selectedActivity.date}`}
+                      color="primary"
+                      variant="outlined"
+                    />
+                  </Box>
 
-                 <Typography variant="h4" sx={{ fontWeight: "bold", mb: 1, color: "#1a1a1a" }}>
-                   {selectedActivity.title}
-                 </Typography>
-{/*
-                 <Typography variant="subtitle1" sx={{ color: "#666666", mb: 3, fontStyle: "italic" }}>
-                   {selectedActivity.subtitle}
-                 </Typography> */}
+                  <Typography variant="h6" sx={{ fontWeight: 600, mb: 1, color: "#333333" }}>
+                    Event Description
+                  </Typography>
 
-                 <Box sx={{ display: "flex", gap: 2, mb: 3, flexWrap: "wrap" }}>
-                   <Chip
-                     icon={<CalendarTodayIcon />}
-                     label={`Year: ${selectedActivity.date}`}
-                     color="primary"
-                     variant="outlined"
-                   />
-                   {/* <Chip
-                     icon={<PeopleAltIcon />}
-                     label={`Participants: ${selectedActivity.participants}`}
-                     color="primary"
-                     variant="outlined"
-                   /> */}
-                 </Box>
-
-                 <Typography variant="h6" sx={{ fontWeight: 600, mb: 1, color: "#333333" }}>
-                   Event Description
-                 </Typography>
-
-                 <Typography variant="body1" sx={{
-                   color: "#555555",
-                   fontSize: "16px",
-                   lineHeight: 1.8,
-                   mb: 4
-                 }}>
-                   {selectedActivity.description}
-                 </Typography>
-
-                 {/* <Button
-                   variant="contained"
-                   color="primary"
-                   endIcon={<ArrowForwardIcon />}
-                   sx={{
-                     borderRadius: "30px",
-                     py: 1.2,
-                     mt: "auto",
-                     textTransform: "none",
-                     background: "linear-gradient(45deg, #7f0000, #ff1a1a)",
-                     fontWeight: 600,
-                     boxShadow: "0 10px 20px rgba(0,0,0,0.1)",
-                     "&:hover": {
-                       boxShadow: "0 15px 30px rgba(0,0,0,0.15)",
-                     }
-                   }}
-                 >
-                   Register for this event
-                 </Button> */}
-               </Box>
-             </>
-           )}
-         </Box>
-       </Fade>
-     </Modal>
-   </Box>
- );
+                  <Typography variant="body1" sx={{
+                    color: "#555555",
+                    fontSize: "16px",
+                    lineHeight: 1.8,
+                    mb: 4
+                  }}>
+                    {selectedActivity.description}
+                  </Typography>
+                </Box>
+              </>
+            )}
+          </Box>
+        </Fade>
+      </Modal>
+    </Box>
+  );
 };
 
 export default OurActivities;

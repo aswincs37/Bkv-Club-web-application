@@ -18,7 +18,12 @@ import MenuIcon from "@mui/icons-material/Menu";
 import CloseIcon from "@mui/icons-material/Close";
 import { Link } from "react-scroll";
 import { useRouter } from "next/navigation";
-
+import { Chilanka } from "next/font/google";
+const chilanka = Chilanka({
+  weight: "400",
+  subsets: ["malayalam"],
+  display: "swap",
+});
 interface NavbarProps {
   setContactOpen: (open: boolean) => void;
 }
@@ -104,8 +109,8 @@ const Navbar: React.FC<NavbarProps> = ({ setContactOpen }) => {
               <Image
                 src="/logo.png"
                 alt="BKV Logo"
-                width={50}
-                height={50}
+                width={40}
+                height={40}
                 style={{
                   objectFit: "contain",
                   transition: "transform 0.3s ease",
@@ -123,9 +128,48 @@ const Navbar: React.FC<NavbarProps> = ({ setContactOpen }) => {
                   borderBottom: "2px solid transparent",
                 }}
               >
-                <div className="flex flex-col">
-                  <span className="text-Black font-bold text-lg md:text-xl">BHAGATH SINGH KALAVEDHÍ VAZHAKKAD (BKV) </span>
-                </div>
+ <Box sx={{ ml: 1.5 }}>
+  {/* Main Title */}
+  <Typography
+    variant="h6"
+    sx={{
+      color: "black",  // Black text color
+      fontFamily: chilanka.style.fontFamily, // Google Font
+      fontWeight: 700,
+      letterSpacing: "0.5px",
+      fontSize: { xs: "1rem", sm: "1.2rem", md: "1.3rem" },
+      transition: "all 0.3s ease",
+      textShadow: "0 2px 4px rgba(0,0,0,0.15)",
+    }}
+  >
+    <span
+      style={{
+        background: "none",  // Remove gradient for solid black text
+        WebkitBackgroundClip: "unset",
+        WebkitTextFillColor: "black"  // Solid black color
+      }}
+    >
+      BHAGATH SINGH
+    </span>
+  </Typography>
+
+  {/* Subtitle */}
+  <Typography
+    variant="body2"
+    sx={{
+      color: "black",  // Black text color
+      fontFamily: chilanka.style.fontFamily,
+      fontSize: { xs: "0.75rem", sm: "0.85rem", md: "0.9rem" },
+      fontWeight: 700,
+      letterSpacing: "0.8px",
+      textTransform: "uppercase",
+      mt: -0.5,
+    }}
+  >
+    KALAVEDHÍ VAZHAKKAD (BKV)
+  </Typography>
+</Box>
+
               </Typography>
             </Link>
           </Box>
@@ -140,7 +184,8 @@ const Navbar: React.FC<NavbarProps> = ({ setContactOpen }) => {
                   key={link.text}
                   sx={{
                     color: "black",
-                    fontSize: "1rem",
+                    fontSize: "1.1rem",
+                    fontFamily: "'Winky Sans'",
                     textTransform: "capitalize",
                     position: "relative",
                     "&:hover": {
@@ -172,7 +217,8 @@ const Navbar: React.FC<NavbarProps> = ({ setContactOpen }) => {
                   key={link.text}
                   sx={{
                     color: "black",
-                    fontSize: "1rem",
+                    fontFamily: "'Winky Sans'",
+                    fontSize: "1.1rem",
                     textTransform: "capitalize",
                     position: "relative",
                     "&:hover": {
@@ -206,14 +252,16 @@ const Navbar: React.FC<NavbarProps> = ({ setContactOpen }) => {
                   smooth
                   duration={500}
                   spy
-                  offset={-100}
+                  offset={-50}
                   onSetActive={handleSetActive}
+                  onClick={() => handleLinkClick(link.to)}
                 >
                   <Button
                     sx={{
                       color: activeLink === link.to ? "#007BFF" : "black",
-                      fontSize: "1rem",
+                      fontSize: "1.1rem",
                       textTransform: "capitalize",
+                      fontFamily: "'Winky Sans'",
                       position: "relative",
                       "&:hover": {
                         color: "#007BFF",
@@ -246,7 +294,8 @@ const Navbar: React.FC<NavbarProps> = ({ setContactOpen }) => {
             sx={{
               backgroundColor: "red",
               color: "white",
-              fontSize: "1rem",
+              fontSize: "1.1rem",
+              fontFamily: "'Winky Sans'",
               textTransform: "capitalize",
               "&:hover": {
                 backgroundColor: "darkred",
@@ -415,7 +464,7 @@ const Navbar: React.FC<NavbarProps> = ({ setContactOpen }) => {
                         smooth
                         duration={500}
                         spy
-                        offset={-80}
+                        offset={-50}
                         onClick={() => handleLinkClick(link.to)}
                       >
                         <Button

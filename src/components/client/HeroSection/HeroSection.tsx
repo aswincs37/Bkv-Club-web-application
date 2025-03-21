@@ -1,14 +1,17 @@
 "use client";
 import React from "react";
-import { Box, Typography, Button, Container } from "@mui/material";
+import { Box, Typography, Button, Container} from "@mui/material";
 import { useRouter } from "next/navigation";
 import { keyframes } from "@mui/system";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import { Chilanka } from "next/font/google";
+import NoticeBoard from "../NoticeBoard/NoticeBoard";
 
-const malayalamFont = Chilanka({
+// Configure the font properly
+const chilanka = Chilanka({
   weight: "400",
   subsets: ["malayalam"],
+  display: "swap",
 });
 
 // Enhanced animations
@@ -23,13 +26,13 @@ const pulseGlow = keyframes`
   100% { box-shadow: 0 0 0 0 rgba(255, 77, 77, 0); }
 `;
 
+
 const HeroSection = () => {
   const router = useRouter();
-
   return (
     <Box
       sx={{
-        mt: { md: 8 }, // xs = 2 for mobile, md = 10 for desktop
+        mt: { md: 8 },
         position: "relative",
         height: "100vh",
         overflow: "hidden",
@@ -91,11 +94,15 @@ const HeroSection = () => {
           zIndex: -3,
         }}
       />
+     {/*Notice borad componet */}
+      <NoticeBoard/>
 
       {/* Content container */}
       <Container maxWidth="md">
         <Box
           sx={{
+
+            height:{xs:500,md:510,},
             position: "relative",
             display: "flex",
             flexDirection: "column",
@@ -104,6 +111,7 @@ const HeroSection = () => {
             textAlign: "center",
             px: { xs: 2, md: 4 },
             py: { xs: 4, md: 6 },
+            mt:{xs:15,md:10},
             borderRadius: "20px",
             background: "rgba(255, 255, 255, 0.05)",
             backdropFilter: "blur(10px)",
@@ -128,7 +136,7 @@ const HeroSection = () => {
           {/* Title text */}
           <Typography
             variant="h2"
-            className={malayalamFont.className}
+            className={chilanka.className}
             sx={{
               color: "white",
               fontWeight: "bold",
@@ -138,6 +146,7 @@ const HeroSection = () => {
               lineHeight: 1.4,
               letterSpacing: "0.02em",
               mb: 2,
+              fontFamily: chilanka.style.fontFamily,
             }}
           >
             ഭഗത് സിംഗ് കലാവേദി വാഴക്കാട്
@@ -146,13 +155,14 @@ const HeroSection = () => {
           {/* Welcome text */}
           <Typography
             variant="h4"
-            className={malayalamFont.className}
+            className={chilanka.className}
             sx={{
               color: "rgba(255, 255, 255, 0.9)",
               animation: `${fadeIn} 2s ease-out`,
               fontSize: { xs: "1.3rem", sm: "1.5rem", md: "1.8rem" },
               mb: 4,
               textShadow: "0 2px 5px rgba(0, 0, 0, 0.2)",
+              fontFamily: chilanka.style.fontFamily,
             }}
           >
             സ്വാഗതം!

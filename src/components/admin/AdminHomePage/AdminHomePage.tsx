@@ -206,7 +206,7 @@ export default function AdminDashboard() {
         {/* Navigation */}
         <nav className="bg-white shadow-md p-4">
           <div className="container mx-auto flex justify-between items-center relative">
-         
+
             {/* Left Section - Logo */}
             <div className="flex items-center space-x-2">
               <NextImage
@@ -217,11 +217,9 @@ export default function AdminDashboard() {
                 className="h-15 w-12"
               />
              <h1 className="sm:text-lg md:text-lg lg:text-xl xl:text-2xl font-bold text-gray-800">
-  <span className="block sm:hidden">B K V</span> {/* Mobile view */}
-  <span className="hidden sm:block">BHAGATH SINGH KALAVEDHÍ VAZHAKKAD (BKV)</span> {/* Tablet and larger */}
-</h1>
-
-
+              <span className="block sm:hidden">B K V</span> {/* Mobile view */}
+              <span className="hidden sm:block">BHAGATH SINGH KALAVEDHÍ VAZHAKKAD (BKV)</span> {/* Tablet and larger */}
+            </h1>
             </div>
 
             {/* Center Section - Mobile and Desktop Compatible */}
@@ -229,15 +227,8 @@ export default function AdminDashboard() {
               Admin Dashboard
             </h1>
 
-
             {/* Right Section - Notifications and Logout */}
             <div className="flex items-center space-x-4">
-              {/* <div className="relative">
-          <Bell className="h-6 w-6 text-gray-600" />
-          <span className="absolute -top-1 -right-1 bg-blue-500 text-white rounded-full text-xs w-4 h-4 flex items-center justify-center">
-            {notifications.filter((n) => !n.read).length}
-          </span>
-        </div> */}
               <button
                 onClick={handleLogout}
                 className="px-4 py-2 bg-red-600 text-white rounded-lg shadow hover:bg-red-700 transition"
@@ -305,114 +296,111 @@ export default function AdminDashboard() {
                 </div>
               </CardContent>
             </Card>
-
           </div>
 
-          {/* Member Management */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center justify-between">
-                    <span>Member Management</span>
-                    <Badge className="bg-blue-500 hover:bg-blue-600">
-                      {members.length} Total
-                    </Badge>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {/* Search Bar */}
-                  <div className="mb-4 relative">
-                    <div className="flex items-center border rounded-lg overflow-hidden">
-                      <input
-                        type="text"
-                        placeholder="Search by name, email or phone..."
-                        className="w-full p-2 outline-none"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                      />
-                      <div className="px-3 py-2 bg-gray-100">
-                        <Search className="h-5 w-5 text-gray-500" />
-                      </div>
+          {/* Member Management - Now in vertical layout */}
+          <div className="grid grid-cols-1 gap-6">
+            {/* Member List */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <span>Member Management</span>
+                  <Badge className="bg-blue-500 hover:bg-blue-600">
+                    {members.length} Total
+                  </Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {/* Search Bar */}
+                <div className="mb-4 relative">
+                  <div className="flex items-center border rounded-lg overflow-hidden">
+                    <input
+                      type="text"
+                      placeholder="Search by name, email or phone..."
+                      className="w-full p-2 outline-none"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                    <div className="px-3 py-2 bg-gray-100">
+                      <Search className="h-5 w-5 text-gray-500" />
                     </div>
                   </div>
+                </div>
 
-                  <Tabs defaultValue="all" onValueChange={(value) => setActiveTab(value)}>
-                    <TabsList className="mb-4">
-                      <TabsTrigger value="all">All Members</TabsTrigger>
-                      <TabsTrigger value="accepted">Accepted</TabsTrigger>
-                      <TabsTrigger value="pending">Pending</TabsTrigger>
-                      <TabsTrigger value="rejected">Rejected</TabsTrigger>
-                      <TabsTrigger value="banned">Banned</TabsTrigger>
-                    </TabsList>
+                <Tabs defaultValue="all" onValueChange={(value) => setActiveTab(value)}>
+                  <TabsList className="mb-4">
+                    <TabsTrigger value="all">All Members</TabsTrigger>
+                    <TabsTrigger value="accepted">Accepted</TabsTrigger>
+                    <TabsTrigger value="pending">Pending</TabsTrigger>
+                    <TabsTrigger value="rejected">Rejected</TabsTrigger>
+                    <TabsTrigger value="banned">Banned</TabsTrigger>
+                  </TabsList>
 
-                    <div className="overflow-x-auto">
-                      <table className="w-full">
-                        <thead className="bg-gray-50">
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">Name</th>
+                          <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">Email</th>
+                          <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">Phone</th>
+                          <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">Status</th>
+                          <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-200">
+                        {loading ? (
                           <tr>
-                            <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">Name</th>
-                            <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">Email</th>
-                            <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">Phone</th>
-                            <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">Status</th>
-                            <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">Actions</th>
+                            <td colSpan={5} className="px-4 py-3 text-center">Loading members...</td>
                           </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-200">
-                          {loading ? (
-                            <tr>
-                              <td colSpan={5} className="px-4 py-3 text-center">Loading members...</td>
-                            </tr>
-                          ) : filteredMembers.length === 0 ? (
-                            <tr>
-                              <td colSpan={5} className="px-4 py-3 text-center">No members found</td>
-                            </tr>
-                          ) : (
-                            filteredMembers.map((member) => (
-                              <tr key={member.id}>
-                                <td className="px-4 py-3 text-sm">{member.fullName}</td>
-                                <td className="px-4 py-3 text-sm">{member.email}</td>
-                                <td className="px-4 py-3 text-sm">{member.phoneNumber}</td>
-                                <td className="px-4 py-3 text-sm">
-                                  <Badge
-                                    className={
-                                      member.status === 'accepted' ? 'bg-green-500' :
-                                        member.status === 'pending' ? 'bg-yellow-500' :
-                                          member.status === 'banned' ? 'bg-purple-500' :
-                                            'bg-red-500'
-                                    }
+                        ) : filteredMembers.length === 0 ? (
+                          <tr>
+                            <td colSpan={5} className="px-4 py-3 text-center">No members found</td>
+                          </tr>
+                        ) : (
+                          filteredMembers.map((member) => (
+                            <tr key={member.id}>
+                              <td className="px-4 py-3 text-sm">{member.fullName}</td>
+                              <td className="px-4 py-3 text-sm">{member.email}</td>
+                              <td className="px-4 py-3 text-sm">{member.phoneNumber}</td>
+                              <td className="px-4 py-3 text-sm">
+                                <Badge
+                                  className={
+                                    member.status === 'accepted' ? 'bg-green-500' :
+                                      member.status === 'pending' ? 'bg-yellow-500' :
+                                        member.status === 'banned' ? 'bg-purple-500' :
+                                          'bg-red-500'
+                                  }
+                                >
+                                  {member.status === 'banned' ? 'Banned' : member.status}
+                                </Badge>
+                              </td>
+                              <td className="px-4 py-3 text-sm">
+                                <div className="flex space-x-2">
+                                  <Button
+                                    variant="contained"
+                                    size="small"
+                                    onClick={() => openMemberDetails(member)}
+                                    className="flex items-center"
                                   >
-                                    {member.status === 'banned' ? 'Banned' : member.status}
-                                  </Badge>
-                                </td>
-                                <td className="px-4 py-3 text-sm">
-                                  <div className="flex space-x-2">
-                                    <Button
-                                      variant="contained"
-                                      size="small"
-                                      onClick={() => openMemberDetails(member)}
-                                      className="flex items-center"
-                                    >
-                                      <Eye className="h-4 w-4 mr-1" /> View
-                                    </Button>
-                                  </div>
-                                </td>
-                              </tr>
-                            ))
-                          )}
-                        </tbody>
-                      </table>
-                    </div>
-                  </Tabs>
-                </CardContent>
-              </Card>
-            </div>
+                                    <Eye className="h-4 w-4 mr-1" /> View
+                                  </Button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </Tabs>
+              </CardContent>
+            </Card>
 
-            <div className="lg:col-span-1 space-y-6">
-              {/* Notifications */}
-              <UpdateNotificationAlert />
-              {/*Add activity */}
-              <AddActivity />
-            </div>
+            {/* Notifications Component */}
+            <UpdateNotificationAlert />
+
+            {/* Add Activity Component */}
+            <AddActivity />
           </div>
         </div>
 
