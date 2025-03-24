@@ -25,6 +25,7 @@ const translations = {
     // Header
     "clubName": "BHAGATH SINGH KALAVEDHÍ VAZHAKKAD (BKV)",
     "home": "Home",
+     "compact_clubName":"B.K.V",
 
     // Form Titles
     "formTitle": "Club Membership Registration Form",
@@ -93,6 +94,7 @@ const translations = {
     // Header
     "clubName": "ഭഗത് സിംഗ് കലാവേദി വഴക്കാട് (ബികെവി)",
     "home": "ഹോം",
+    "compact_clubName":"ബി.കെ.വി",
 
     // Form Titles
     "formTitle": "ക്ലബ് അംഗത്വ രജിസ്ട്രേഷൻ ഫോം",
@@ -201,28 +203,29 @@ export const LanguageSelector = () => {
     setLanguage(lang);
   };
   return (
-    <div className="flex space-x-2 items-center">
-      <button
-        onClick={() => handleLanguageChange('english')}
-        className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
-          language === 'english'
-            ? 'bg-white text-blue-700'
-            : 'bg-blue-600 text-white hover:bg-blue-500'
-        }`}
-      >
-        English
-      </button>
-      <button
-        onClick={() => handleLanguageChange('malayalam')}
-        className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
-          language === 'malayalam'
-            ? 'bg-white text-blue-700'
-            : 'bg-blue-600 text-white hover:bg-blue-500'
-        }`}
-      >
-        മലയാളം
-      </button>
-    </div>
+    <div className="flex flex-col md:flex-row md:space-x-2 space-y-2 md:space-y-0 items-center">
+  <button
+    onClick={() => handleLanguageChange('english')}
+    className={`w-full md:w-auto px-3 py-1 rounded-md text-sm font-medium transition-colors ${
+      language === 'english'
+        ? 'bg-white text-blue-700'
+        : 'bg-blue-600 text-white hover:bg-blue-500'
+    }`}
+  >
+    English
+  </button>
+  <button
+    onClick={() => handleLanguageChange('malayalam')}
+    className={`w-full md:w-auto px-3 py-1 rounded-md text-sm font-medium transition-colors ${
+      language === 'malayalam'
+        ? 'bg-white text-blue-700'
+        : 'bg-blue-600 text-white hover:bg-blue-500'
+    }`}
+  >
+    മലയാളം
+  </button>
+</div>
+
   );
 };
 
