@@ -62,7 +62,7 @@ const AddActivity = () => {
     date: '',
     photos: []
   });
-    const [searchTerm, setSearchTerm] = useState<string>('');
+  const [searchTerm, setSearchTerm] = useState<string>('');
   const [photoFiles, setPhotoFiles] = useState<File[]>([]);
   const [photoUploadProgress, setPhotoUploadProgress] = useState<number>(0);
   const [photoPreview, setPhotoPreview] = useState<PhotoPreview[]>([]);
@@ -171,178 +171,178 @@ const AddActivity = () => {
   };
 
   // NEW FUNCTION: Upload to Cloudinary
-// Updated Cloudinary upload function with folder structure
-const uploadToCloudinary = async (file: File, activityTitle: string): Promise<{ url: string, thumbnailUrl: string, publicId: string }> => {
-  return new Promise((resolve, reject) => {
-    console.log('Starting Cloudinary upload for file:', file.name);
+  // Updated Cloudinary upload function with folder structure
+  const uploadToCloudinary = async (file: File, activityTitle: string): Promise<{ url: string, thumbnailUrl: string, publicId: string }> => {
+    return new Promise((resolve, reject) => {
+      console.log('Starting Cloudinary upload for file:', file.name);
 
-    // Create a sanitized folder name from the activity title
-    const folderName = activityTitle
-      .toLowerCase()
-      .replace(/[^\w\s]/gi, '') // Remove special characters
-      .replace(/\s+/g, '-');     // Replace spaces with hyphens
+      // Create a sanitized folder name from the activity title
+      const folderName = activityTitle
+        .toLowerCase()
+        .replace(/[^\w\s]/gi, '') // Remove special characters
+        .replace(/\s+/g, '-');     // Replace spaces with hyphens
 
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
 
-    // Add folder parameter
-    formData.append('folder', `activities/${folderName}`);
+      // Add folder parameter
+      formData.append('folder', `activities/${folderName}`);
 
-    console.log('Upload URL:', CLOUDINARY_UPLOAD_URL);
-    console.log('Upload preset:', CLOUDINARY_UPLOAD_PRESET);
-    console.log('Upload folder:', `activities/${folderName}`);
+      console.log('Upload URL:', CLOUDINARY_UPLOAD_URL);
+      console.log('Upload preset:', CLOUDINARY_UPLOAD_PRESET);
+      console.log('Upload folder:', `activities/${folderName}`);
 
-    fetch(CLOUDINARY_UPLOAD_URL, {
-      method: 'POST',
-      body: formData
-    })
-    .then(response => {
-      if (!response.ok) {
-        console.error('Cloudinary server error:', response.status, response.statusText);
-        return response.text().then(text => {
-          throw new Error(`Cloudinary API error: ${response.status} ${text}`);
+      fetch(CLOUDINARY_UPLOAD_URL, {
+        method: 'POST',
+        body: formData
+      })
+        .then(response => {
+          if (!response.ok) {
+            console.error('Cloudinary server error:', response.status, response.statusText);
+            return response.text().then(text => {
+              throw new Error(`Cloudinary API error: ${response.status} ${text}`);
+            });
+          }
+          return response.json();
+        })
+        .then(data => {
+          console.log('Cloudinary response:', data);
+
+          if (!data.secure_url) {
+            console.error('Cloudinary response missing secure_url:', data);
+            reject(new Error('Invalid Cloudinary response - missing secure_url'));
+            return;
+          }
+
+          const fullUrl = data.secure_url;
+          // For thumbnail, we'll create a transformation URL manually
+          const thumbnailUrl = fullUrl.replace('/upload/', '/upload/c_fill,h_150,w_150/');
+
+          resolve({
+            url: fullUrl,
+            thumbnailUrl: thumbnailUrl,
+            publicId: data.public_id || ''
+          });
+        })
+        .catch(error => {
+          console.error('Error uploading to Cloudinary:', error);
+          reject(error);
         });
-      }
-      return response.json();
-    })
-    .then(data => {
-      console.log('Cloudinary response:', data);
-
-      if (!data.secure_url) {
-        console.error('Cloudinary response missing secure_url:', data);
-        reject(new Error('Invalid Cloudinary response - missing secure_url'));
-        return;
-      }
-
-      const fullUrl = data.secure_url;
-      // For thumbnail, we'll create a transformation URL manually
-      const thumbnailUrl = fullUrl.replace('/upload/', '/upload/c_fill,h_150,w_150/');
-
-      resolve({
-        url: fullUrl,
-        thumbnailUrl: thumbnailUrl,
-        publicId: data.public_id || ''
-      });
-    })
-    .catch(error => {
-      console.error('Error uploading to Cloudinary:', error);
-      reject(error);
     });
-  });
-};
+  };
   // Process all photos for an activity with Cloudinary
-// Updated processPhotos function
-const processPhotos = async (activityTitle: string): Promise<Photo[]> => {
-  if (photoFiles.length === 0) return [];
+  // Updated processPhotos function
+  const processPhotos = async (activityTitle: string): Promise<Photo[]> => {
+    if (photoFiles.length === 0) return [];
 
-  const photoData: Photo[] = [];
-  let progress = 0;
-  const increment = 100 / photoFiles.length;
+    const photoData: Photo[] = [];
+    let progress = 0;
+    const increment = 100 / photoFiles.length;
 
-  for (let i = 0; i < photoFiles.length; i++) {
-    try {
-      // Upload to Cloudinary with folder path
-      const { url, thumbnailUrl, publicId } = await uploadToCloudinary(photoFiles[i], activityTitle);
+    for (let i = 0; i < photoFiles.length; i++) {
+      try {
+        // Upload to Cloudinary with folder path
+        const { url, thumbnailUrl, publicId } = await uploadToCloudinary(photoFiles[i], activityTitle);
 
-      const photo: Photo = {
-        name: photoFiles[i].name,
-        uploadedAt: new Date().toISOString(),
-        thumbnailUrl: thumbnailUrl,
-        url: url,
-        publicId: publicId
-      };
+        const photo: Photo = {
+          name: photoFiles[i].name,
+          uploadedAt: new Date().toISOString(),
+          thumbnailUrl: thumbnailUrl,
+          url: url,
+          publicId: publicId
+        };
 
-      photoData.push(photo);
+        photoData.push(photo);
 
-      progress += increment;
-      setPhotoUploadProgress(Math.min(Math.round(progress), 100));
-    } catch (error) {
-      console.error('Error processing photo:', error);
+        progress += increment;
+        setPhotoUploadProgress(Math.min(Math.round(progress), 100));
+      } catch (error) {
+        console.error('Error processing photo:', error);
+      }
     }
-  }
 
-  return photoData;
-};
+    return photoData;
+  };
 
   // Add new activity - updated to use new photo handling
-// Updated addActivity function
-const addActivity = async () => {
-  if (!newActivity.title || !newActivity.description) {
-    alert('Please fill in the title and description');
-    return;
-  }
+  // Updated addActivity function
+  const addActivity = async () => {
+    if (!newActivity.title || !newActivity.description) {
+      alert('Please fill in the title and description');
+      return;
+    }
 
-  setIsLoading(true);
-  try {
-    // Process photos with Cloudinary, passing the activity title
-    const photoData = await processPhotos(newActivity.title);
+    setIsLoading(true);
+    try {
+      // Process photos with Cloudinary, passing the activity title
+      const photoData = await processPhotos(newActivity.title);
 
-    // Add the activity document with photo data directly
-    await addDoc(collection(db, 'activities'), {
-      title: newActivity.title,
-      description: newActivity.description,
-      date: newActivity.date || new Date().toISOString().split('T')[0],
-      photos: photoData, // Store complete photo data
-      createdAt: serverTimestamp()
-    });
+      // Add the activity document with photo data directly
+      await addDoc(collection(db, 'activities'), {
+        title: newActivity.title,
+        description: newActivity.description,
+        date: newActivity.date || new Date().toISOString().split('T')[0],
+        photos: photoData, // Store complete photo data
+        createdAt: serverTimestamp()
+      });
 
-    // Reset form
-    setNewActivity({
-      title: '',
-      description: '',
-      date: '',
-      photos: []
-    });
-    setPhotoFiles([]);
-    setPhotoPreview([]);
-    setPhotoUploadProgress(0);
-    setShowActivityForm(false);
+      // Reset form
+      setNewActivity({
+        title: '',
+        description: '',
+        date: '',
+        photos: []
+      });
+      setPhotoFiles([]);
+      setPhotoPreview([]);
+      setPhotoUploadProgress(0);
+      setShowActivityForm(false);
 
-    // Refresh activities list
-    fetchActivities();
-  } catch (error) {
-    console.error('Error adding activity:', error);
-    alert('Failed to add activity. Please try again: ' + error);
-  } finally {
-    setIsLoading(false);
-  }
-};
+      // Refresh activities list
+      fetchActivities();
+    } catch (error) {
+      console.error('Error adding activity:', error);
+      alert('Failed to add activity. Please try again: ' + error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-// Updated updateActivity function
-const updateActivity = async () => {
-  if (!currentActivityId || !newActivity.title || !newActivity.description) {
-    alert('Please fill in the title and description');
-    return;
-  }
+  // Updated updateActivity function
+  const updateActivity = async () => {
+    if (!currentActivityId || !newActivity.title || !newActivity.description) {
+      alert('Please fill in the title and description');
+      return;
+    }
 
-  setIsLoading(true);
-  try {
-    // Process new photos with Cloudinary, passing the activity title
-    const photoData = await processPhotos(newActivity.title);
+    setIsLoading(true);
+    try {
+      // Process new photos with Cloudinary, passing the activity title
+      const photoData = await processPhotos(newActivity.title);
 
-    // Update the activity document
-    const activityRef = doc(db, 'activities', currentActivityId);
-    await updateDoc(activityRef, {
-      title: newActivity.title,
-      description: newActivity.description,
-      date: newActivity.date || new Date().toISOString().split('T')[0],
-      photos: [...existingPhotos, ...photoData], // Combine existing and new photos
-      updatedAt: serverTimestamp()
-    });
+      // Update the activity document
+      const activityRef = doc(db, 'activities', currentActivityId);
+      await updateDoc(activityRef, {
+        title: newActivity.title,
+        description: newActivity.description,
+        date: newActivity.date || new Date().toISOString().split('T')[0],
+        photos: [...existingPhotos, ...photoData], // Combine existing and new photos
+        updatedAt: serverTimestamp()
+      });
 
-    // Reset form
-    resetForm();
+      // Reset form
+      resetForm();
 
-    // Refresh activities list
-    fetchActivities();
-  } catch (error) {
-    console.error('Error updating activity:', error);
-    alert('Failed to update activity. Please try again: ' + error);
-  } finally {
-    setIsLoading(false);
-  }
-};
+      // Refresh activities list
+      fetchActivities();
+    } catch (error) {
+      console.error('Error updating activity:', error);
+      alert('Failed to update activity. Please try again: ' + error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Load activity for editing - remains mostly the same
   const loadActivityForEdit = async (activityId: string) => {
@@ -450,29 +450,29 @@ const updateActivity = async () => {
             <span className="mb-2 sm:mb-0">Activities</span>
             <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
               <div className="relative w-full sm:w-auto">
-              <div className="relative">
-  <input
-    type="text"
-    placeholder="Search by title or content..."
-    value={searchTerm}
-    onChange={(e) => setSearchTerm(e.target.value)}
-    className="p-2 pl-8 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-64"
-  />
-  <svg
-    className="absolute left-2 top-2.5 h-4 w-4 text-gray-500"
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-    />
-  </svg>
-</div>
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Search by title or content..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="p-2 pl-8 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-64"
+                  />
+                  <svg
+                    className="absolute left-2 top-2.5 h-4 w-4 text-gray-500"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                    />
+                  </svg>
+                </div>
               </div>
               <button
                 onClick={() => setShowActivityForm(true)}
@@ -494,7 +494,7 @@ const updateActivity = async () => {
                   type="text"
                   className="w-full p-2 border rounded-md"
                   value={newActivity.title}
-                  onChange={(e) => setNewActivity({...newActivity, title: e.target.value})}
+                  onChange={(e) => setNewActivity({ ...newActivity, title: e.target.value })}
                 />
               </div>
               <div>
@@ -503,7 +503,7 @@ const updateActivity = async () => {
                   className="w-full p-2 border rounded-md"
                   rows={3}
                   value={newActivity.description}
-                  onChange={(e) => setNewActivity({...newActivity, description: e.target.value})}
+                  onChange={(e) => setNewActivity({ ...newActivity, description: e.target.value })}
                 />
               </div>
               <div>
@@ -512,7 +512,7 @@ const updateActivity = async () => {
                   type="date"
                   className="w-full p-2 border rounded-md"
                   value={newActivity.date}
-                  onChange={(e) => setNewActivity({...newActivity, date: e.target.value})}
+                  onChange={(e) => setNewActivity({ ...newActivity, date: e.target.value })}
                 />
               </div>
               <div>
@@ -635,8 +635,8 @@ const updateActivity = async () => {
                     Add Your First Activity
                   </button>
                 </div>
-                ) : (
-                  filteredNotifications.map((activity) => (
+              ) : (
+                filteredNotifications.map((activity) => (
                   <div key={activity.id} className="p-4 bg-gray-50 rounded-lg border">
                     <div className="flex flex-col sm:flex-row sm:justify-between">
                       <p className="font-medium text-lg mb-1 sm:mb-0">{activity.title}</p>
@@ -686,7 +686,7 @@ const updateActivity = async () => {
               {activities.length > 5 && (
                 <div className="text-center mt-4">
                   <button
-                    onClick={() => {/* Implement view all logic */}}
+                    onClick={() => {/* Implement view all logic */ }}
                     className="px-4 py-2 text-sm bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
                     type="button"
                   >

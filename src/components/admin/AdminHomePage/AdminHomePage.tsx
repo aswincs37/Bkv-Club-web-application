@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { UserCheck, UserX, Clock, Eye, Search, XCircle } from 'lucide-react';
+import { UserCheck, UserX, Clock, Eye, Search, XCircle, PieChart, Banknote } from 'lucide-react';
 import { Button } from '@mui/material';
 import { collection, doc, getDocs, updateDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebaseConfig';
@@ -15,7 +15,6 @@ import MemberDetailsDialog from '@/components/admin/MemberDetailsDialogue/Member
 import StatusNotification from '../StatusNotification/StatusNotification';
 import { generatePDF } from '../printPDF/generatePDF';
 import NextImage from 'next/image';
-
 
 // Enhanced Member interface to match your Firestore structure
 export interface Member {
@@ -41,7 +40,7 @@ export interface Member {
   profilePhoto?: string;
   idPhoto?: string;
   signaturePhoto?: string;
-  signatureUrl?:string;
+  signatureUrl?: string;
   photoUrl?: string;
 }
 
@@ -194,6 +193,11 @@ export default function AdminDashboard() {
   };
 
 
+  function handleIncomeExpense() {
+    router.push("income-expense/");
+
+  }
+
   return (
     <>
       <StatusNotification
@@ -210,16 +214,16 @@ export default function AdminDashboard() {
             {/* Left Section - Logo */}
             <div className="flex items-center space-x-2">
               <NextImage
-               height={80}
-               width={80}
+                height={80}
+                width={80}
                 src="/logo.png"
                 alt="BKV Logo"
                 className="h-15 w-12"
               />
-             <h1 className="sm:text-lg md:text-lg lg:text-xl xl:text-2xl font-bold text-gray-800">
-              <span className="block sm:hidden">B K V</span> {/* Mobile view */}
-              <span className="hidden sm:block">BHAGATH SINGH KALAVEDHÍ VAZHAKKAD (BKV)</span> {/* Tablet and larger */}
-            </h1>
+              <h1 className="sm:text-lg md:text-lg lg:text-xl xl:text-2xl font-bold text-gray-800">
+                <span className="block sm:hidden">B K V</span> {/* Mobile view */}
+                <span className="hidden sm:block">BHAGATH SINGH KALAVEDHÍ VAZHAKKAD (BKV)</span> {/* Tablet and larger */}
+              </h1>
             </div>
 
             {/* Center Section - Mobile and Desktop Compatible */}
@@ -228,6 +232,15 @@ export default function AdminDashboard() {
             </h1>
 
             {/* Right Section - Notifications and Logout */}
+            <div className="flex items-center space-x-4 pr-4">
+              <button
+                onClick={handleIncomeExpense}
+                className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-500 transition"
+              >
+                <Banknote className="w-5 h-5" />
+                <span>Income/Expense</span>
+              </button>
+            </div>
             <div className="flex items-center space-x-4">
               <button
                 onClick={handleLogout}

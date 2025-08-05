@@ -12,7 +12,7 @@ import {
   CircularProgress,
   Link,
 } from '@mui/material';
-import { ThemeProvider, createTheme,  } from '@mui/material/styles';
+import { ThemeProvider, createTheme, } from '@mui/material/styles';
 import {
   Visibility,
   VisibilityOff,
@@ -22,7 +22,7 @@ import {
 } from '@mui/icons-material';
 
 import { useRouter } from 'next/navigation';
-import {signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '@/lib/firebaseConfig';
 import { FirebaseError } from 'firebase/app';
 
@@ -141,7 +141,7 @@ const AdminLoginPage: React.FC = () => {
 
   return (
     <>
-    <div className="bg-blue-700 py-3 px-6 shadow-md">
+      <div className="bg-blue-700 py-3 px-6 shadow-md">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <img
@@ -156,192 +156,192 @@ const AdminLoginPage: React.FC = () => {
             </div>
           </div>
           <div>
-          <Link href="/" className="px-4 py-2 bg-white text-blue-700 rounded-lg font-medium hover:bg-blue-100 transition duration-300 flex items-center">
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    className="h-5 w-5 mr-1"
-    fill="none"
-    viewBox="0 0 24 24"
-    stroke="currentColor"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-    />
-  </svg>
-  Home
-</Link>
+            <Link href="/" className="px-4 py-2 bg-white text-blue-700 rounded-lg font-medium hover:bg-blue-100 transition duration-300 flex items-center">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5 mr-1"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+                />
+              </svg>
+              Home
+            </Link>
           </div>
         </div>
       </div>
-    <ThemeProvider theme={adminTheme}>
-      <Box
-        sx={{
-          minHeight: '100vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          backgroundImage: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
-          py: 4,
-          pt:-3
-        }}
-      >
-        <Container maxWidth="sm">
-          <Paper
-            elevation={4}
-            sx={{
-              p: { xs: 3, sm: 5 },
-              overflow: 'hidden',
-              position: 'relative',
-              '&::before': {
-                content: '""',
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                width: '100%',
-                height: '6px',
-                backgroundColor: 'primary.main',
-              },
-            }}
-          >
-            <Box
+      <ThemeProvider theme={adminTheme}>
+        <Box
+          sx={{
+            minHeight: '100vh',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundImage: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+            py: 4,
+            pt: -3
+          }}
+        >
+          <Container maxWidth="sm">
+            <Paper
+              elevation={4}
               sx={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                mb: 4,
+                p: { xs: 3, sm: 5 },
+                overflow: 'hidden',
+                position: 'relative',
+                '&::before': {
+                  content: '""',
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  height: '6px',
+                  backgroundColor: 'primary.main',
+                },
               }}
             >
               <Box
                 sx={{
-                  backgroundColor: 'primary.main',
-                  color: 'white',
-                  borderRadius: '50%',
-                  width: 64,
-                  height: 64,
                   display: 'flex',
+                  flexDirection: 'column',
                   alignItems: 'center',
-                  justifyContent: 'center',
-                  mb: 2,
+                  mb: 4,
                 }}
               >
-                <AdminPanelSettings fontSize="large" />
-              </Box>
+                <Box
+                  sx={{
+                    backgroundColor: 'primary.main',
+                    color: 'white',
+                    borderRadius: '50%',
+                    width: 64,
+                    height: 64,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    mb: 2,
+                  }}
+                >
+                  <AdminPanelSettings fontSize="large" />
+                </Box>
 
-              <Typography
-                variant="h4"
-                component="h1"
-                align="center"
-                sx={{ mb: 1, color: 'primary.main' }}
-              >
-                Admin Portal
-              </Typography>
+                <Typography
+                  variant="h4"
+                  component="h1"
+                  align="center"
+                  sx={{ mb: 1, color: 'primary.main' }}
+                >
+                  Admin Portal
+                </Typography>
 
-              <Typography
-                variant="body1"
-                align="center"
-                color="text.secondary"
-                sx={{ mb: 3 }}
-              >
-                Login to access your administrative dashboard
-              </Typography>
-            </Box>
-
-            {error && (
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 1,
-                  backgroundColor: 'error.light',
-                  color: 'white',
-                  p: 2,
-                  borderRadius: 2,
-                  mb: 3,
-                }}
-              >
-                <ErrorOutline fontSize="small" />
-                <Typography variant="body2">{error}</Typography>
-              </Box>
-            )}
-
-            <Box component="form" onSubmit={handleSubmit}>
-              <TextField
-                fullWidth
-                variant="outlined"
-                label="Email Address"
-                placeholder="admin@example.com"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                margin="normal"
-                required
-                autoFocus
-                sx={{ mb: 2 }}
-              />
-
-              <TextField
-                fullWidth
-                variant="outlined"
-                label="Password"
-                type={showPassword ? 'text' : 'password'}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                margin="normal"
-                required
-                sx={{ mb: 3 }}
-                InputProps={{
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <IconButton
-                        onClick={() => setShowPassword(!showPassword)}
-                        edge="end"
-                      >
-                        {showPassword ? <VisibilityOff /> : <Visibility />}
-                      </IconButton>
-                    </InputAdornment>
-                  ),
-                }}
-              />
-
-              <Button
-                fullWidth
-                type="submit"
-                variant="contained"
-                color="primary"
-                size="large"
-                disabled={loading}
-                sx={{
-                  py: 1.5,
-                  fontSize: '1rem',
-                  '&:hover': {
-                    backgroundColor: 'primary.dark',
-                    boxShadow: '0 6px 20px rgba(58, 54, 224, 0.3)',
-                  },
-                }}
-                startIcon={loading ? undefined : <LockOutlined />}
-              >
-                {loading ? <CircularProgress size={24} color="inherit" /> : 'Sign In'}
-              </Button>
-
-              <Box sx={{ mt: 3, textAlign: 'center' }}>
-                <Typography variant="body2" color="text.secondary">
-                  Forgot your password? Please contact your system administrator.
+                <Typography
+                  variant="body1"
+                  align="center"
+                  color="text.secondary"
+                  sx={{ mb: 3 }}
+                >
+                  Login to access your administrative dashboard
                 </Typography>
               </Box>
-            </Box>
-          </Paper>
 
-          <Box sx={{ mt: 3, textAlign: 'center' }}>
-            <Typography variant="body2" color="text.secondary">
-              © {new Date().getFullYear()} Bhagathsingh Kalavedhi Vazhakkad. All rights reserved.
-            </Typography>
-          </Box>
-        </Container>
-      </Box>
-    </ThemeProvider></>
+              {error && (
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1,
+                    backgroundColor: 'error.light',
+                    color: 'white',
+                    p: 2,
+                    borderRadius: 2,
+                    mb: 3,
+                  }}
+                >
+                  <ErrorOutline fontSize="small" />
+                  <Typography variant="body2">{error}</Typography>
+                </Box>
+              )}
+
+              <Box component="form" onSubmit={handleSubmit}>
+                <TextField
+                  fullWidth
+                  variant="outlined"
+                  label="Email Address"
+                  placeholder="admin@example.com"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  margin="normal"
+                  required
+                  autoFocus
+                  sx={{ mb: 2 }}
+                />
+
+                <TextField
+                  fullWidth
+                  variant="outlined"
+                  label="Password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  margin="normal"
+                  required
+                  sx={{ mb: 3 }}
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          onClick={() => setShowPassword(!showPassword)}
+                          edge="end"
+                        >
+                          {showPassword ? <VisibilityOff /> : <Visibility />}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+
+                <Button
+                  fullWidth
+                  type="submit"
+                  variant="contained"
+                  color="primary"
+                  size="large"
+                  disabled={loading}
+                  sx={{
+                    py: 1.5,
+                    fontSize: '1rem',
+                    '&:hover': {
+                      backgroundColor: 'primary.dark',
+                      boxShadow: '0 6px 20px rgba(58, 54, 224, 0.3)',
+                    },
+                  }}
+                  startIcon={loading ? undefined : <LockOutlined />}
+                >
+                  {loading ? <CircularProgress size={24} color="inherit" /> : 'Sign In'}
+                </Button>
+
+                <Box sx={{ mt: 3, textAlign: 'center' }}>
+                  <Typography variant="body2" color="text.secondary">
+                    Forgot your password? Please contact your system administrator.
+                  </Typography>
+                </Box>
+              </Box>
+            </Paper>
+
+            <Box sx={{ mt: 3, textAlign: 'center' }}>
+              <Typography variant="body2" color="text.secondary">
+                © {new Date().getFullYear()} Bhagathsingh Kalavedhi Vazhakkad. All rights reserved.
+              </Typography>
+            </Box>
+          </Container>
+        </Box>
+      </ThemeProvider></>
   );
 };
 
