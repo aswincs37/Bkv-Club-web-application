@@ -202,7 +202,7 @@ const HeroSection = () => {
             }}
             endIcon={<ArrowForwardIcon />}
           >
-            Apply for Registration
+            Apply for Club Membership
           </Button>
 
           {/* Badge/tag line */}
